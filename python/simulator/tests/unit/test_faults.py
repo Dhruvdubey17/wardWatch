@@ -22,8 +22,8 @@ def adt() -> str:
     return build_adt_a01(MessageHeader("A1", ADMITTED), patient, Visit("E1", "01", "A", ADMITTED))
 
 
-def only(name: str, **kwargs: int) -> FaultInjector:
-    return FaultInjector({name: 1.0}, seed=1, **kwargs)
+def only(name: str, max_frame_bytes: int = 1 << 20) -> FaultInjector:
+    return FaultInjector({name: 1.0}, seed=1, max_frame_bytes=max_frame_bytes)
 
 
 def test_catalog_has_every_fault_from_the_brief() -> None:
@@ -150,7 +150,8 @@ def test_rates_are_respected_for_a_fixed_seed() -> None:
 def test_same_seed_damages_the_same_messages() -> None:
     def run() -> list[str | None]:
         injector = FaultInjector({"missing_pid": 0.3, "trailing_separators": 0.3}, seed=11)
-        return [injector.apply(ORU, f"C{i}", "result")[1] and f"{i}" for i in range(100)]
+        faults = [injector.apply(ORU, f"C{i}", "result")[1] for i in range(100)]
+        return [fault.name if fault else None for fault in faults]
 
     assert run() == run()
 
