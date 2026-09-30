@@ -1,5 +1,6 @@
 #include "wardwatch/spsc_ring.hpp"
 
+#include <atomic>
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
@@ -97,6 +98,10 @@ TEST(SpscRing, StressOneProducerOneConsumer) {
     constexpr std::uint64_t kItems = 2'000'000;
     SpscRing<std::uint64_t> ring(64);
     std::uint64_t full_count = 0;
+    // Whether the consumer keeps up is up to the scheduler, so the consumer
+    // waits until the producer has found the ring full once. The full path is
+    // then exercised on every run, not only when the producer happens to win.
+    std::atomic<bool> producer_saw_full{false};
 
     std::thread producer([&] {
         for (std::uint64_t value = 0; value < kItems;) {
@@ -104,11 +109,15 @@ TEST(SpscRing, StressOneProducerOneConsumer) {
                 ++value;
             } else {
                 ++full_count;
+                producer_saw_full.store(true, std::memory_order_release);
                 std::this_thread::yield();
             }
         }
     });
 
+    while (!producer_saw_full.load(std::memory_order_acquire)) {
+        std::this_thread::yield();
+    }
     std::uint64_t expected = 0;
     std::uint64_t sum = 0;
     bool in_order = true;
