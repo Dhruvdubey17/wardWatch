@@ -13,6 +13,7 @@ from wardwatch_fhir.alerts_consumer import AlertsConsumer
 from wardwatch_fhir.converter import Converted
 from wardwatch_fhir.escalation import run_escalation
 from wardwatch_fhir.events import EventBus, vitals_event
+from wardwatch_fhir.metrics import record_lag
 from wardwatch_fhir.scores_consumer import ScoresConsumer
 from wardwatch_fhir.settings import Settings
 from wardwatch_fhir.validated_consumer import ValidatedConsumer
@@ -26,6 +27,19 @@ async def run_until_stopped(
     while not stop.is_set():
         await step()
     log.info("worker stopped", extra={"worker": name})
+
+
+def measured(
+    consumer: AIOKafkaConsumer, step: Callable[[], Awaitable[int]]
+) -> Callable[[], Awaitable[int]]:
+    """`step`, followed by a consumer lag reading."""
+
+    async def run() -> int:
+        handled = await step()
+        await record_lag(consumer)
+        return handled
+
+    return run
 
 
 def kafka_consumer(settings: Settings, topic: str, group_suffix: str) -> AIOKafkaConsumer:
@@ -73,11 +87,14 @@ class Workers:
                 self._bus.publish(event)
 
         steps = {
-            "validated": ValidatedConsumer(
-                validated, self._producer, self._sessions, settings, on_stored=on_stored
-            ).run_once,
-            "alerts": AlertsConsumer(alerts, self._alerts).run_once,
-            "scores": ScoresConsumer(scores, self._sessions, self._bus).run_once,
+            "validated": measured(
+                validated,
+                ValidatedConsumer(
+                    validated, self._producer, self._sessions, settings, on_stored=on_stored
+                ).run_once,
+            ),
+            "alerts": measured(alerts, AlertsConsumer(alerts, self._alerts).run_once),
+            "scores": measured(scores, ScoresConsumer(scores, self._sessions, self._bus).run_once),
         }
         for name, step in steps.items():
             self._tasks.append(

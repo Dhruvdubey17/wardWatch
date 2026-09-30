@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 
 from wardwatch_scorer.engine import Outgoing, ScoringEngine
-from wardwatch_scorer.metrics import ACTIVE_ENCOUNTERS, END_TO_END_LATENCY
+from wardwatch_scorer.metrics import ACTIVE_ENCOUNTERS, END_TO_END_LATENCY, record_lag
 from wardwatch_scorer.settings import Settings
 
 log = logging.getLogger(__name__)
@@ -61,6 +61,7 @@ class ScorerService:
             await self._consumer.commit({partition: records[-1].offset + 1})
         await self.publish(self._engine.tick())
         ACTIVE_ENCOUNTERS.set(len(self._engine.windows))
+        await record_lag(self._consumer)
         return handled
 
     async def run(self, stop: asyncio.Event) -> None:

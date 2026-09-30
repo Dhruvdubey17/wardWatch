@@ -6,6 +6,7 @@ import pytest
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 from fhir_kafka import create_topics, produce, read_all, unique_topics
 from jsonschema import Draft202012Validator
+from prometheus_client import REGISTRY
 from scorer_support import observation_records, stay_frame
 from wardwatch_ml.bundle import ServingBundle
 from wardwatch_ml.contracts import contracts_dir
@@ -47,6 +48,9 @@ async def test_service_publishes_scores_and_alerts(
     await producer.start()
     engine = ScoringEngine(OnlineScorer(bundle), settle_seconds=0.3, wall=lambda: datetime.now(UTC))
     service = ScorerService(settings, engine, consumer, producer)
+    published_before = (
+        REGISTRY.get_sample_value("wardwatch_msh7_to_alert_publish_seconds_count") or 0.0
+    )
     try:
         read = 0
         for _ in range(100):
@@ -61,6 +65,8 @@ async def test_service_publishes_scores_and_alerts(
     alerts = await read_all(kafka_bootstrap, settings.alerts_topic, 1, timeout_s=5)
     assert [payload["icu_hour"] for _, payload in scores] == list(range(1, 41))
     assert alerts
+    published = REGISTRY.get_sample_value("wardwatch_msh7_to_alert_publish_seconds_count") or 0.0
+    assert published - published_before == len(alerts)
     for topic, items in (("ward.scores", scores), ("ward.alerts", alerts)):
         validator = Draft202012Validator(
             json.loads((contracts_dir() / "schemas" / f"{topic}.schema.json").read_text())
