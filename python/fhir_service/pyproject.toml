@@ -3,7 +3,20 @@ name = "wardwatch-fhir"
 version = "0.1.0"
 description = "HL7 to FHIR conversion service and ward API for WardWatch."
 requires-python = ">=3.12,<3.13"
-dependencies = []
+dependencies = [
+    "aiokafka>=0.11",
+    "alembic>=1.13",
+    "asyncpg>=0.29",
+    "fastapi>=0.115",
+    "prometheus-client>=0.20",
+    "pydantic>=2.8",
+    "pydantic-settings>=2.4",
+    "sqlalchemy[asyncio]>=2.0.32",
+    "uvicorn>=0.30",
+]
+
+[project.scripts]
+wardwatch-fhir = "wardwatch_fhir.main:main"
 
 [build-system]
 requires = ["hatchling>=1.25"]

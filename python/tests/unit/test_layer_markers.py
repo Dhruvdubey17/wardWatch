@@ -44,6 +44,6 @@ def test_plugin_rejects_misplaced_marker(pytester: pytest.Pytester) -> None:
     unit_dir.joinpath("test_bad.py").write_text(
         "import pytest\n\n@pytest.mark.integration\ndef test_x():\n    pass\n"
     )
-    result = pytester.runpytest("-p", "layer_markers")
+    result = pytester.runpytest("-p", "layer_markers", "-p", "no:asyncio")
     result.stderr.fnmatch_lines(["*marked 'integration' but lives under tests/unit/*"])
     assert result.ret != 0

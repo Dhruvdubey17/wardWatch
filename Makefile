@@ -55,9 +55,14 @@ python-env:
 python-test-unit: python-env
 	cd python && uv run pytest -c pyproject.toml -q -m unit $(call py_test_dirs,unit)
 
+# Integration fixtures use the services from scripts/local_services.sh when its
+# environment file exists, and testcontainers otherwise.
+LOCAL_SERVICES_ENV := .tools/services/env
+with_services = if [ -f $(LOCAL_SERVICES_ENV) ]; then . ./$(LOCAL_SERVICES_ENV); fi;
+
 python-test-integration: ingest-build python-env
 	@dirs="$(call py_test_dirs,integration)"; if [ -z "$$dirs" ]; then echo "python-test-integration: no integration suites yet"; \
-	else cd python && uv run pytest -c pyproject.toml -q -m integration $$dirs; fi
+	else $(with_services) cd python && uv run pytest -c pyproject.toml -q -m integration $$dirs; fi
 
 data:
 	./scripts/fetch_physionet.sh
@@ -144,7 +149,7 @@ ingest-coverage:
 PY_COVERAGE_GATES := simulator:wardwatch_sim:85 ml:wardwatch_ml:90 fhir_service:wardwatch_fhir:85 scorer:wardwatch_scorer:85
 
 python-coverage: ingest-build python-env
-	cd python && for gate in $(PY_COVERAGE_GATES); do \
+	$(with_services) cd python && for gate in $(PY_COVERAGE_GATES); do \
 		pkg=$${gate%%:*}; rest=$${gate#*:}; module=$${rest%%:*}; minimum=$${rest#*:}; \
 		ls $$pkg/tests/*/test_*.py >/dev/null 2>&1 || { echo "python-coverage: $$pkg has no tests yet"; continue; }; \
 		uv run pytest -c pyproject.toml -q -p no:randomly --cov=$$module --cov-report=term-missing:skip-covered \
