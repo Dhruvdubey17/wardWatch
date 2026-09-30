@@ -105,7 +105,9 @@ async def test_running_service_consumes_stores_and_serves(
             headers={"If-Match": alert["etag"]},
         )
         assert acknowledged.status_code == 200
-    published = await read_all(kafka_bootstrap, topics["fhir.observations"], 13)
+        # Read while the service runs: the observations are published after the
+        # database commit, so the API can show all 13 before the last is sent.
+        published = await read_all(kafka_bootstrap, topics["fhir.observations"], 13)
     assert len(published) == 13
     events = await read_all(kafka_bootstrap, topics["ward.alert-events"], 1)
     assert json.loads(json.dumps(events[0][1]))["transition"] == "acknowledge"

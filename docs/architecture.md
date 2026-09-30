@@ -87,5 +87,5 @@ The end to end latency is `wardwatch_msh7_to_alert_publish_seconds`: from the MS
 | 3000 | dashboard |
 | 9090 | Prometheus |
 | 3001 | Grafana |
-| 5432 | Postgres |
+| 15432 | Postgres (set WARDWATCH_POSTGRES_HOST_PORT to change) |
 | 9092 | Kafka |

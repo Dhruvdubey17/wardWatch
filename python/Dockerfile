@@ -6,7 +6,10 @@ FROM python:3.12-slim AS build
 ARG SERVICE
 COPY --from=ghcr.io/astral-sh/uv:0.5.29 /uv /usr/local/bin/uv
 WORKDIR /build/python
-ENV UV_LINK_MODE=copy UV_COMPILE_BYTECODE=1 UV_PYTHON_DOWNLOADS=never
+# The environment is built at the path it runs from: console scripts carry
+# the absolute path of their interpreter in the shebang line.
+ENV UV_LINK_MODE=copy UV_COMPILE_BYTECODE=1 UV_PYTHON_DOWNLOADS=never \
+    UV_PROJECT_ENVIRONMENT=/opt/wardwatch/.venv
 COPY python/pyproject.toml python/uv.lock ./
 COPY python/simulator ./simulator
 COPY python/ml ./ml
@@ -23,7 +26,7 @@ RUN apt-get update \
     && apt-get install --yes --no-install-recommends libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 RUN useradd --system --uid 10001 wardwatch
-COPY --from=build /build/python/.venv /opt/wardwatch/.venv
+COPY --from=build /opt/wardwatch/.venv /opt/wardwatch/.venv
 COPY contracts /opt/wardwatch/contracts
 ENV PATH=/opt/wardwatch/.venv/bin:$PATH \
     WARDWATCH_CONTRACTS_DIR=/opt/wardwatch/contracts \

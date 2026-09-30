@@ -29,6 +29,24 @@ async def run_until_stopped(
     log.info("worker stopped", extra={"worker": name})
 
 
+STOP_GRACE_SECONDS = 5.0
+
+
+async def stop_tasks(tasks: list[asyncio.Task[None]], stop: asyncio.Event, grace: float) -> None:
+    """Stop the loops after their current step; cancel any still running after `grace` seconds.
+
+    Cancelling at once would cut a consumer off between its database commit and
+    its Kafka publishes, and every shutdown would then redeliver that record.
+    """
+    stop.set()
+    if not tasks:
+        return
+    _, pending = await asyncio.wait(tasks, timeout=grace)
+    for task in pending:
+        task.cancel()
+    await asyncio.gather(*tasks, return_exceptions=True)
+
+
 def measured(
     consumer: AIOKafkaConsumer, step: Callable[[], Awaitable[int]]
 ) -> Callable[[], Awaitable[int]]:
@@ -114,9 +132,6 @@ class Workers:
         )
 
     async def stop(self) -> None:
-        self._stop.set()
-        for task in self._tasks:
-            task.cancel()
-        await asyncio.gather(*self._tasks, return_exceptions=True)
+        await stop_tasks(self._tasks, self._stop, STOP_GRACE_SECONDS)
         for consumer in self._consumers:
             await consumer.stop()

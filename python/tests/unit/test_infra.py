@@ -162,3 +162,19 @@ def test_linux_builds_use_clang_19() -> None:
     dockerfile = (REPO / "ingest" / "Dockerfile").read_text()
     assert "clang-19" in dockerfile
     assert "ENV PATH=/usr/lib/llvm-19/bin:$PATH" in dockerfile
+
+
+def test_postgres_stays_off_the_hosts_own_postgres_port() -> None:
+    # A developer's own Postgres usually holds 127.0.0.1:5432, and make up failed on it.
+    (published,) = compose()["services"]["postgres"]["ports"]
+    assert published == "127.0.0.1:${WARDWATCH_POSTGRES_HOST_PORT:-15432}:5432"
+
+
+def test_python_images_build_the_environment_where_it_runs() -> None:
+    # Console script shebangs hold the build-time interpreter path, so a venv
+    # built in one place and copied to another cannot start its services.
+    dockerfile = (REPO / "python" / "Dockerfile").read_text()
+    built = re.search(r"UV_PROJECT_ENVIRONMENT=(\S+)", dockerfile)
+    assert built is not None
+    assert f"COPY --from=build {built.group(1)} {built.group(1)}" in dockerfile
+    assert f"ENV PATH={built.group(1)}/bin:$PATH" in dockerfile

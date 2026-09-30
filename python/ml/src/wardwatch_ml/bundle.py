@@ -10,7 +10,7 @@ import json
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
@@ -22,8 +22,11 @@ from wardwatch_ml.features import FeatureSpec
 from wardwatch_ml.fingerprint import DataFingerprint
 from wardwatch_ml.policy import AlertPolicy
 from wardwatch_ml.thresholds import OperatingPoint, news2_policy
-from wardwatch_ml.training import FittedSite
 from wardwatch_ml.xgb_model import predict_margin
+
+if TYPE_CHECKING:
+    # training imports the GRU and so torch, which the scorer image leaves out.
+    from wardwatch_ml.training import FittedSite
 
 MODEL_FILE = "model.ubj"
 MANIFEST_FILE = "bundle.json"
@@ -95,7 +98,7 @@ def model_version(git_sha: str, now: datetime | None = None) -> str:
     return f"xgb-{moment:%Y%m%d%H%M%S}-{git_sha[:7]}"
 
 
-def write_bundle(fitted: FittedSite, directory: Path, version: str, git_sha: str) -> Path:
+def write_bundle(fitted: "FittedSite", directory: Path, version: str, git_sha: str) -> Path:
     """Write the XGBoost model and its manifest; returns the bundle directory."""
     model = fitted.models[SERVED_MODEL]
     target = directory / version

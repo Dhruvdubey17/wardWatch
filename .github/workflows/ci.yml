@@ -206,9 +206,13 @@ jobs:
           file: python/Dockerfile
           build-args: SERVICE=${{ matrix.service }}
           tags: ${{ matrix.service }}:ci
-          load: false
+          load: true
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+      # The console script's shebang must name an interpreter inside the image.
+      - run: >-
+          docker run --rm --entrypoint sh ${{ matrix.service }}:ci -c
+          'script="$(command -v ${{ matrix.service }})" && interpreter="$(head -n 1 "$script" | cut -c 3-)" && test -x "$interpreter"'
 
   frontend-lint:
     runs-on: ubuntu-24.04
