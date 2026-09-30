@@ -21,7 +21,7 @@ CPP_SOURCES = $(shell cd $(INGEST) && for f in $$(git ls-files -co --exclude-sta
 py_test_dirs = $(shell cd python && for d in tests/$(1) ../scripts/tests/$(1) $(addsuffix /tests/$(1),$(PY_PACKAGES)); do \
 	ls $$d/test_*.py >/dev/null 2>&1 && echo $$d; done)
 
-.PHONY: ml-smoke python-coverage python-env python-setup python-lint python-test-unit python-test-integration
+.PHONY: ml-smoke openapi python-coverage python-env python-setup python-lint python-test-unit python-test-integration
 .PHONY: ingest-coverage ingest-build ingest-lint ingest-test-unit ingest-test-integration ingest-sanitize ingest-fuzz
 .PHONY: format help setup setup-tools data lint lint-prose test-unit test-integration test \
 	sanitize fuzz bench train eval coverage check up demo down autopilot
@@ -152,9 +152,13 @@ python-coverage: ingest-build python-env
 	$(with_services) cd python && for gate in $(PY_COVERAGE_GATES); do \
 		pkg=$${gate%%:*}; rest=$${gate#*:}; module=$${rest%%:*}; minimum=$${rest#*:}; \
 		ls $$pkg/tests/*/test_*.py >/dev/null 2>&1 || { echo "python-coverage: $$pkg has no tests yet"; continue; }; \
-		uv run pytest -c pyproject.toml -q -p no:randomly --cov=$$module --cov-report=term-missing:skip-covered \
-			--cov-fail-under=$$minimum $$pkg/tests || exit 1; \
+		uv run pytest -c pyproject.toml -q --cov=$$module --cov-report=term-missing:skip-covered \
+			--cov-report=json:../.tools/coverage-$$pkg.json --cov-fail-under=$$minimum $$pkg/tests || exit 1; \
 	done
+	cd python && uv run python ../scripts/coverage_file_gates.py ../.tools/coverage-fhir_service.json
+
+openapi:
+	cd python && uv run wardwatch-fhir openapi --output ../contracts/openapi.json
 
 coverage: ingest-coverage python-coverage
 

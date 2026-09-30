@@ -165,3 +165,12 @@ jobs:
           cache-dependency-glob: python/uv.lock
       - run: cd python && uv sync --frozen
       - run: make ml-smoke
+
+  python-images:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        service: [wardwatch-fhir, wardwatch-scorer, wardwatch-sim]
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f python/Dockerfile --build-arg SERVICE=${{ matrix.service }} -t ${{ matrix.service }}:ci .

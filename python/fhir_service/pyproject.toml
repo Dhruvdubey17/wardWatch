@@ -13,6 +13,7 @@ dependencies = [
     "pydantic-settings>=2.4",
     "sqlalchemy[asyncio]>=2.0.32",
     "uvicorn>=0.30",
+    "wardwatch-ml",
 ]
 
 [project.scripts]
@@ -24,3 +25,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/wardwatch_fhir"]
+
+[tool.uv.sources]
+wardwatch-ml = { workspace = true }

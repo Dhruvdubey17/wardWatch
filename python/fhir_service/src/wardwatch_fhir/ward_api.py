@@ -26,6 +26,7 @@ from wardwatch_fhir.alert_states import (
     Transition,
     parse_etag,
 )
+from wardwatch_fhir.schemas import AlertView, CensusBed, ErrorBody, PatientVitals
 from wardwatch_fhir.ward_views import census, patient_vitals
 
 router = APIRouter(prefix="/api")
@@ -64,7 +65,7 @@ def _error(status_code: int, detail: str, alert: dict[str, Any] | None = None) -
     return JSONResponse(body, status_code=status_code, headers=headers)
 
 
-@router.get("/alerts")
+@router.get("/alerts", response_model=list[AlertView], responses={400: {"model": ErrorBody}})
 async def list_alerts(
     request: Request,
     status: Annotated[str | None, Query(description="comma-separated statuses")] = None,
@@ -76,7 +77,7 @@ async def list_alerts(
     return await _service(request).list_alerts(statuses or None)
 
 
-@router.get("/alerts/{alert_id}")
+@router.get("/alerts/{alert_id}", response_model=AlertView, responses={404: {"model": ErrorBody}})
 async def get_alert(alert_id: str, request: Request, response: Response) -> Any:
     try:
         alert = await _service(request).get(alert_id)
@@ -123,7 +124,17 @@ async def _act(
     return JSONResponse(alert, headers={"ETag": alert["etag"]})
 
 
-@router.post("/alerts/{alert_id}/acknowledge")
+@router.post(
+    "/alerts/{alert_id}/acknowledge",
+    response_model=AlertView,
+    responses={
+        400: {"model": ErrorBody},
+        404: {"model": ErrorBody},
+        409: {"model": ErrorBody},
+        412: {"model": ErrorBody},
+        428: {"model": ErrorBody},
+    },
+)
 async def acknowledge(
     alert_id: str,
     body: ActionBody,
@@ -133,7 +144,17 @@ async def acknowledge(
     return await _act(request, alert_id, "acknowledge", body, if_match=if_match)
 
 
-@router.post("/alerts/{alert_id}/escalate")
+@router.post(
+    "/alerts/{alert_id}/escalate",
+    response_model=AlertView,
+    responses={
+        400: {"model": ErrorBody},
+        404: {"model": ErrorBody},
+        409: {"model": ErrorBody},
+        412: {"model": ErrorBody},
+        428: {"model": ErrorBody},
+    },
+)
 async def escalate(
     alert_id: str,
     body: EscalateBody,
@@ -143,7 +164,17 @@ async def escalate(
     return await _act(request, alert_id, "escalate", body, if_match=if_match, reason=body.reason)
 
 
-@router.post("/alerts/{alert_id}/resolve")
+@router.post(
+    "/alerts/{alert_id}/resolve",
+    response_model=AlertView,
+    responses={
+        400: {"model": ErrorBody},
+        404: {"model": ErrorBody},
+        409: {"model": ErrorBody},
+        412: {"model": ErrorBody},
+        428: {"model": ErrorBody},
+    },
+)
 async def resolve(
     alert_id: str,
     body: ActionBody,
@@ -153,13 +184,15 @@ async def resolve(
     return await _act(request, alert_id, "resolve", body, if_match=if_match)
 
 
-@router.get("/ward/census")
+@router.get("/ward/census", response_model=list[CensusBed])
 async def ward_census(request: Request) -> Any:
     async with request.app.state.sessions() as session:
         return await census(session)
 
 
-@router.get("/patients/{mrn}/vitals")
+@router.get(
+    "/patients/{mrn}/vitals", response_model=PatientVitals, responses={404: {"model": ErrorBody}}
+)
 async def vitals(
     mrn: str, request: Request, hours: Annotated[int, Query(ge=1, le=168)] = 12
 ) -> Any:
@@ -174,7 +207,7 @@ async def vitals(
 RECONNECT_MILLISECONDS = 3000
 
 
-@router.get("/stream")
+@router.get("/stream", response_class=StreamingResponse)
 async def stream(request: Request) -> StreamingResponse:
     """Server-Sent Events: vitals, score and alert changes as they happen."""
     bus = request.app.state.bus

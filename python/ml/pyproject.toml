@@ -6,12 +6,19 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
     "numpy>=2.0",
     "pandas>=2.2",
-    "scikit-learn>=1.5",
-    "xgboost>=2.1",
-    "torch>=2.4",
-    "shap>=0.46",
-    "matplotlib>=3.9",
 ]
+
+[project.optional-dependencies]
+# Fitting, scoring and explaining the XGBoost model; the scorer needs these.
+model = [
+    "scikit-learn>=1.5",
+    "shap>=0.46",
+    "xgboost>=2.1",
+]
+# The GRU, used only in training and evaluation.
+gru = ["torch>=2.4"]
+# Plots in evaluation reports.
+report = ["matplotlib>=3.9"]
 
 [project.scripts]
 wardwatch-ml = "wardwatch_ml.cli:main"
