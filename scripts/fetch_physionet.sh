@@ -26,7 +26,8 @@ mkdir -p "$data_dir"
 
 curl --fail --silent --show-error --retry 3 -o "$data_dir/SHA256SUMS.txt" "$base_url/SHA256SUMS.txt"
 curl --fail --silent --show-error --retry 3 -o "$data_dir/LICENSE.txt" "$base_url/LICENSE.txt"
-(cd "$data_dir" && grep ' LICENSE.txt$' SHA256SUMS.txt | shasum -a 256 -c -)
+# SHA256SUMS.txt separates hash and name with one space; shasum wants two.
+(cd "$data_dir" && grep ' LICENSE.txt$' SHA256SUMS.txt | awk '{print $1 "  " $2}' | shasum -a 256 -c -)
 
 for set_name in training_setA training_setB; do
   set_dir="$data_dir/$set_name"
