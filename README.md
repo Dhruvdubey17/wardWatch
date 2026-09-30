@@ -41,7 +41,7 @@ This builds the images, starts Postgres, Kafka, ingest, the FHIR service, the sc
 
 On a clean clone the simulator replays the three committed fixture stays, one of which deteriorates within hours, and the scorer runs NEWS2 only. For a full ward and the sepsis model, run `make data` and `make train` first. `make down` stops the stack and removes its volumes. Every port binds to 127.0.0.1.
 
-Without Docker, `make frontend-test-e2e-local` runs the same pipeline as local processes (`scripts/local_stack.sh`) and drives it with Playwright.
+Without Docker, `make frontend-test-e2e-local` runs the same pipeline as local processes (`scripts/local_stack.sh`) and drives it with Playwright. The compose files have been checked with `docker compose config` and by `python/tests/unit/test_infra.py`, but the machine this was built on had no running Docker daemon, so `make demo` itself was exercised only through the CI jobs `stack-smoke` and `frontend-e2e`, not locally.
 
 ## Reproducing the evaluation
 
