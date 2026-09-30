@@ -1,0 +1,569 @@
+{
+  "patient": {
+    "resourceType": "Patient",
+    "id": "MRN0001234",
+    "identifier": [
+      {
+        "use": "usual",
+        "type": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+              "code": "MR"
+            }
+          ]
+        },
+        "system": "https://wardwatch.local/fhir/sid/mrn",
+        "value": "MRN0001234"
+      }
+    ],
+    "name": [
+      {
+        "use": "official",
+        "family": "Lindgren",
+        "given": [
+          "Ada",
+          "M"
+        ]
+      }
+    ],
+    "gender": "female",
+    "birthDate": "1958-02-14"
+  },
+  "encounter": {
+    "resourceType": "Encounter",
+    "id": "ENC000001",
+    "identifier": [
+      {
+        "system": "https://wardwatch.local/fhir/sid/visit-number",
+        "value": "ENC000001"
+      }
+    ],
+    "status": "in-progress",
+    "class": {
+      "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+      "code": "IMP",
+      "display": "inpatient encounter"
+    },
+    "subject": {
+      "reference": "Patient/MRN0001234"
+    },
+    "location": [
+      {
+        "location": {
+          "display": "ICU 01 A"
+        }
+      }
+    ]
+  },
+  "observations": [
+    {
+      "resourceType": "Observation",
+      "id": "SIM000007-1",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+              "code": "vital-signs",
+              "display": "Vital Signs"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "8867-4",
+            "display": "Heart rate"
+          }
+        ],
+        "text": "Heart rate"
+      },
+      "subject": {
+        "reference": "Patient/MRN0001234"
+      },
+      "encounter": {
+        "reference": "Encounter/ENC000001"
+      },
+      "effectiveDateTime": "2024-03-15T13:00:00+00:00",
+      "valueQuantity": {
+        "value": 112.0,
+        "unit": "/min",
+        "system": "http://unitsofmeasure.org",
+        "code": "/min"
+      }
+    },
+    {
+      "resourceType": "Observation",
+      "id": "SIM000007-2",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+              "code": "vital-signs",
+              "display": "Vital Signs"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "9279-1",
+            "display": "Respiratory rate"
+          }
+        ],
+        "text": "Respiratory rate"
+      },
+      "subject": {
+        "reference": "Patient/MRN0001234"
+      },
+      "encounter": {
+        "reference": "Encounter/ENC000001"
+      },
+      "effectiveDateTime": "2024-03-15T13:00:00+00:00",
+      "valueQuantity": {
+        "value": 24.0,
+        "unit": "/min",
+        "system": "http://unitsofmeasure.org",
+        "code": "/min"
+      }
+    },
+    {
+      "resourceType": "Observation",
+      "id": "SIM000007-3",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+              "code": "vital-signs",
+              "display": "Vital Signs"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "59408-5",
+            "display": "Oxygen saturation in Arterial blood by Pulse oximetry"
+          }
+        ],
+        "text": "Oxygen saturation in Arterial blood by Pulse oximetry"
+      },
+      "subject": {
+        "reference": "Patient/MRN0001234"
+      },
+      "encounter": {
+        "reference": "Encounter/ENC000001"
+      },
+      "effectiveDateTime": "2024-03-15T13:00:00+00:00",
+      "valueQuantity": {
+        "value": 93.0,
+        "unit": "%",
+        "system": "http://unitsofmeasure.org",
+        "code": "%"
+      }
+    },
+    {
+      "resourceType": "Observation",
+      "id": "SIM000007-4",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+              "code": "vital-signs",
+              "display": "Vital Signs"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "8310-5",
+            "display": "Body temperature"
+          }
+        ],
+        "text": "Body temperature"
+      },
+      "subject": {
+        "reference": "Patient/MRN0001234"
+      },
+      "encounter": {
+        "reference": "Encounter/ENC000001"
+      },
+      "effectiveDateTime": "2024-03-15T13:00:00+00:00",
+      "valueQuantity": {
+        "value": 38.6,
+        "unit": "Cel",
+        "system": "http://unitsofmeasure.org",
+        "code": "Cel"
+      }
+    },
+    {
+      "resourceType": "Observation",
+      "id": "SIM000007-5",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+              "code": "vital-signs",
+              "display": "Vital Signs"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "8480-6",
+            "display": "Systolic blood pressure"
+          }
+        ],
+        "text": "Systolic blood pressure"
+      },
+      "subject": {
+        "reference": "Patient/MRN0001234"
+      },
+      "encounter": {
+        "reference": "Encounter/ENC000001"
+      },
+      "effectiveDateTime": "2024-03-15T13:00:00+00:00",
+      "valueQuantity": {
+        "value": 98.0,
+        "unit": "mm[Hg]",
+        "system": "http://unitsofmeasure.org",
+        "code": "mm[Hg]"
+      }
+    },
+    {
+      "resourceType": "Observation",
+      "id": "SIM000007-6",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+              "code": "vital-signs",
+              "display": "Vital Signs"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "8478-0",
+            "display": "Mean blood pressure"
+          }
+        ],
+        "text": "Mean blood pressure"
+      },
+      "subject": {
+        "reference": "Patient/MRN0001234"
+      },
+      "encounter": {
+        "reference": "Encounter/ENC000001"
+      },
+      "effectiveDateTime": "2024-03-15T13:00:00+00:00",
+      "valueQuantity": {
+        "value": 71.0,
+        "unit": "mm[Hg]",
+        "system": "http://unitsofmeasure.org",
+        "code": "mm[Hg]"
+      }
+    },
+    {
+      "resourceType": "Observation",
+      "id": "SIM000007-7",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+              "code": "vital-signs",
+              "display": "Vital Signs"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "8462-4",
+            "display": "Diastolic blood pressure"
+          }
+        ],
+        "text": "Diastolic blood pressure"
+      },
+      "subject": {
+        "reference": "Patient/MRN0001234"
+      },
+      "encounter": {
+        "reference": "Encounter/ENC000001"
+      },
+      "effectiveDateTime": "2024-03-15T13:00:00+00:00",
+      "valueQuantity": {
+        "value": 58.0,
+        "unit": "mm[Hg]",
+        "system": "http://unitsofmeasure.org",
+        "code": "mm[Hg]"
+      }
+    },
+    {
+      "resourceType": "Observation",
+      "id": "SIM000007-8",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+              "code": "vital-signs",
+              "display": "Vital Signs"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "3150-0",
+            "display": "Inhaled oxygen concentration"
+          }
+        ],
+        "text": "Inhaled oxygen concentration"
+      },
+      "subject": {
+        "reference": "Patient/MRN0001234"
+      },
+      "encounter": {
+        "reference": "Encounter/ENC000001"
+      },
+      "effectiveDateTime": "2024-03-15T13:00:00+00:00",
+      "valueQuantity": {
+        "value": 0.4,
+        "unit": "1",
+        "system": "http://unitsofmeasure.org",
+        "code": "1"
+      }
+    },
+    {
+      "resourceType": "Observation",
+      "id": "SIM000007-9",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+              "code": "laboratory",
+              "display": "Laboratory"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "2524-7",
+            "display": "Lactate [Moles/volume] in Serum or Plasma"
+          }
+        ],
+        "text": "Lactate [Moles/volume] in Serum or Plasma"
+      },
+      "subject": {
+        "reference": "Patient/MRN0001234"
+      },
+      "encounter": {
+        "reference": "Encounter/ENC000001"
+      },
+      "effectiveDateTime": "2024-03-15T13:00:00+00:00",
+      "valueQuantity": {
+        "value": 3.1,
+        "unit": "mmol/L",
+        "system": "http://unitsofmeasure.org",
+        "code": "mmol/L"
+      }
+    },
+    {
+      "resourceType": "Observation",
+      "id": "SIM000007-10",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+              "code": "laboratory",
+              "display": "Laboratory"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "6690-2",
+            "display": "Leukocytes [#/volume] in Blood by Automated count"
+          }
+        ],
+        "text": "Leukocytes [#/volume] in Blood by Automated count"
+      },
+      "subject": {
+        "reference": "Patient/MRN0001234"
+      },
+      "encounter": {
+        "reference": "Encounter/ENC000001"
+      },
+      "effectiveDateTime": "2024-03-15T13:00:00+00:00",
+      "valueQuantity": {
+        "value": 14.2,
+        "unit": "10*3/uL",
+        "system": "http://unitsofmeasure.org",
+        "code": "10*3/uL"
+      }
+    },
+    {
+      "resourceType": "Observation",
+      "id": "SIM000007-11",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+              "code": "laboratory",
+              "display": "Laboratory"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "2160-0",
+            "display": "Creatinine [Mass/volume] in Serum or Plasma"
+          }
+        ],
+        "text": "Creatinine [Mass/volume] in Serum or Plasma"
+      },
+      "subject": {
+        "reference": "Patient/MRN0001234"
+      },
+      "encounter": {
+        "reference": "Encounter/ENC000001"
+      },
+      "effectiveDateTime": "2024-03-15T13:00:00+00:00",
+      "valueQuantity": {
+        "value": 1.7,
+        "unit": "mg/dL",
+        "system": "http://unitsofmeasure.org",
+        "code": "mg/dL"
+      }
+    },
+    {
+      "resourceType": "Observation",
+      "id": "SIM000007-12",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+              "code": "laboratory",
+              "display": "Laboratory"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "777-3",
+            "display": "Platelets [#/volume] in Blood by Automated count"
+          }
+        ],
+        "text": "Platelets [#/volume] in Blood by Automated count"
+      },
+      "subject": {
+        "reference": "Patient/MRN0001234"
+      },
+      "encounter": {
+        "reference": "Encounter/ENC000001"
+      },
+      "effectiveDateTime": "2024-03-15T13:00:00+00:00",
+      "valueQuantity": {
+        "value": 142.0,
+        "unit": "10*3/uL",
+        "system": "http://unitsofmeasure.org",
+        "code": "10*3/uL"
+      }
+    },
+    {
+      "resourceType": "Observation",
+      "id": "SIM000007-13",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+              "code": "laboratory",
+              "display": "Laboratory"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "1975-2",
+            "display": "Bilirubin.total [Mass/volume] in Serum or Plasma"
+          }
+        ],
+        "text": "Bilirubin.total [Mass/volume] in Serum or Plasma"
+      },
+      "subject": {
+        "reference": "Patient/MRN0001234"
+      },
+      "encounter": {
+        "reference": "Encounter/ENC000001"
+      },
+      "effectiveDateTime": "2024-03-15T13:00:00+00:00",
+      "valueQuantity": {
+        "value": 1.2,
+        "unit": "mg/dL",
+        "system": "http://unitsofmeasure.org",
+        "code": "mg/dL"
+      }
+    }
+  ],
+  "skipped_observations": 0
+}
