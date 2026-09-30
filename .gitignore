@@ -1,1 +1,50 @@
+# Datasets and generated artifacts are reproducible with make data / make train.
+data/
+ml/artifacts/
+python/ml/artifacts/
+*.ubj
+*.pt
+*.joblib
+
+# Build output
+build/
+ingest/build/
+out/
+*.o
+*.a
+*.profraw
+*.profdata
+
+# Local toolchain and logs
+.tools/
 logs/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.hypothesis/
+
+# Node
+node_modules/
+.next/
+frontend/coverage/
+frontend/test-results/
+frontend/playwright-report/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/
