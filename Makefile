@@ -22,7 +22,7 @@ py_test_dirs = $(shell cd python && for d in tests/$(1) ../scripts/tests/$(1) $(
 	ls $$d/test_*.py >/dev/null 2>&1 && echo $$d; done)
 
 .PHONY: python-setup python-lint python-test-unit python-test-integration
-.PHONY: ingest-build ingest-lint ingest-test-unit ingest-test-integration ingest-sanitize ingest-fuzz
+.PHONY: ingest-coverage ingest-build ingest-lint ingest-test-unit ingest-test-integration ingest-sanitize ingest-fuzz
 .PHONY: format help setup setup-tools data lint lint-prose test-unit test-integration test \
 	sanitize fuzz bench train eval coverage check up demo down autopilot
 
@@ -123,8 +123,10 @@ train:
 eval:
 	@echo "eval: added in Phase 3 task P3.11"
 
-coverage:
-	@echo "coverage: gates are added with each component"
+ingest-coverage:
+	./scripts/ingest_coverage.sh
+
+coverage: ingest-coverage
 
 check: lint lint-prose test sanitize coverage
 

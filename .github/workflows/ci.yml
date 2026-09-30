@@ -46,3 +46,71 @@ jobs:
           path: ingest/build/fuzz/_deps
           key: fuzz-deps-${{ hashFiles('ingest/cmake/Dependencies.cmake', 'ingest/fuzz/CMakeLists.txt') }}
       - run: make fuzz FUZZ_SECONDS=60
+
+  cpp-release:
+    runs-on: ubuntu-24.04
+    services:
+      kafka:
+        image: apache/kafka:3.8.0
+        ports: ["9092:9092"]
+    env:
+      WARDWATCH_KAFKA_BROKERS: 127.0.0.1:9092
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y clang ninja-build librdkafka-dev pkg-config
+      - uses: actions/cache@v4
+        with:
+          path: ingest/build/release/_deps
+          key: cpp-release-deps-${{ hashFiles('ingest/cmake/Dependencies.cmake') }}
+      - run: cd ingest && cmake --preset release && cmake --build --preset release
+      - run: cd ingest && ctest --preset release --label-exclude kafka
+      - run: cd ingest && ctest --preset release --label-regex kafka
+
+  cpp-asan:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y clang ninja-build librdkafka-dev pkg-config
+      - uses: actions/cache@v4
+        with:
+          path: ingest/build/asan/_deps
+          key: cpp-asan-deps-${{ hashFiles('ingest/cmake/Dependencies.cmake') }}
+      - run: cd ingest && cmake --preset asan && cmake --build --preset asan && ctest --preset asan --label-exclude kafka
+
+  cpp-tsan:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y clang ninja-build librdkafka-dev pkg-config
+      - uses: actions/cache@v4
+        with:
+          path: ingest/build/tsan/_deps
+          key: cpp-tsan-deps-${{ hashFiles('ingest/cmake/Dependencies.cmake') }}
+      - run: cd ingest && cmake --preset tsan && cmake --build --preset tsan && ctest --preset tsan --label-exclude kafka
+
+  cpp-coverage:
+    runs-on: ubuntu-24.04
+    services:
+      kafka:
+        image: apache/kafka:3.8.0
+        ports: ["9092:9092"]
+    env:
+      WARDWATCH_KAFKA_BROKERS: 127.0.0.1:9092
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y clang llvm ninja-build librdkafka-dev pkg-config
+      - uses: actions/cache@v4
+        with:
+          path: ingest/build/coverage/_deps
+          key: cpp-coverage-deps-${{ hashFiles('ingest/cmake/Dependencies.cmake') }}
+      - run: make ingest-coverage
+
+  ingest-image:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f ingest/Dockerfile -t wardwatch-ingest:ci .

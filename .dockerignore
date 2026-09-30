@@ -1,0 +1,9 @@
+**/build/
+**/node_modules/
+**/.venv/
+**/__pycache__/
+.tools/
+data/
+logs/
+ml/artifacts/
+.git/
