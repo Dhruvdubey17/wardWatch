@@ -3,6 +3,10 @@ project(wardwatch_ingest LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# CMake 3.28+ scans C++20 and later sources for modules, which needs
+# clang-scan-deps. Ubuntu's clang package does not ship it, and nothing here
+# uses modules.
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(WARDWATCH_BUILD_TESTS "Build unit and integration tests" ON)

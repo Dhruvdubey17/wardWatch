@@ -4,8 +4,10 @@
 FROM ubuntu:24.04 AS build
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        ca-certificates clang cmake ninja-build pkg-config librdkafka-dev \
+        ca-certificates clang-19 cmake ninja-build pkg-config librdkafka-dev \
     && rm -rf /var/lib/apt/lists/*
+# Ubuntu 24.04's default clang is 18, whose libstdc++ headers hide std::expected.
+ENV PATH=/usr/lib/llvm-19/bin:$PATH
 WORKDIR /src
 COPY contracts/ contracts/
 COPY ingest/ ingest/

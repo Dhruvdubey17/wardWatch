@@ -146,3 +146,19 @@ def test_ci_uses_the_same_kafka_as_the_stack() -> None:
     )
     assert images
     assert set(images) == {compose()["services"]["kafka"]["image"]}
+
+
+def test_linux_builds_use_clang_19() -> None:
+    # Ubuntu 24.04's default clang 18 cannot compile libstdc++'s std::expected.
+    workflow_text = (REPO / ".github" / "workflows" / "ci.yml").read_text()
+    installs = re.findall(r"apt-get install -y ([^\n]*)", workflow_text)
+    clang_installs = [line for line in installs if "clang" in line]
+    assert clang_installs
+    for line in clang_installs:
+        packages = line.split()
+        assert "clang-19" in packages, line
+        assert "clang" not in packages, line
+    assert workflow_text.count("/usr/lib/llvm-19/bin") == len(clang_installs)
+    dockerfile = (REPO / "ingest" / "Dockerfile").read_text()
+    assert "clang-19" in dockerfile
+    assert "ENV PATH=/usr/lib/llvm-19/bin:$PATH" in dockerfile
