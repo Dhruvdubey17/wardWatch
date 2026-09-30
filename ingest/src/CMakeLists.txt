@@ -1,4 +1,6 @@
 add_library(wardwatch_core
+  encoding.cpp
+  error.cpp
   loinc.cpp)
 target_include_directories(wardwatch_core
   PUBLIC ${PROJECT_SOURCE_DIR}/include ${WARDWATCH_GENERATED_DIR})

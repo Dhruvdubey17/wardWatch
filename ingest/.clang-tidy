@@ -1,5 +1,8 @@
 # Checks are chosen for bugs and clarity. The disabled ones either conflict
-# with the Google-based format, or flag idioms this codebase uses on purpose.
+# with the Google-based format, or flag idioms this codebase uses on purpose:
+# the parser indexes string_views after explicit bounds checks, so the
+# unchecked-access check would only push .at() into the hot path, and
+# three-field error aggregates read fine without designators.
 Checks: >
   bugprone-*,
   cert-*,
@@ -25,7 +28,9 @@ Checks: >
   -readability-identifier-length,
   -readability-function-cognitive-complexity,
   -cert-err58-cpp,
-  -portability-avoid-pragma-once
+  -portability-avoid-pragma-once,
+  -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access,
+  -modernize-use-designated-initializers
 WarningsAsErrors: '*'
 HeaderFilterRegex: '.*/ingest/(include|src|apps)/.*'
 CheckOptions:

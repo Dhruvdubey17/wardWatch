@@ -94,7 +94,9 @@
     "CONTROL_ID_DUPLICATE": "MSH-10 was already used by a message with different content.",
     "TIMESTAMP_INVALID": "A DTM field required by the pipeline cannot be parsed.",
     "VALUE_TYPE_MISMATCH": "OBX-5 does not match the value type in OBX-2.",
-    "RESULT_STATUS_INVALID": "OBX-11 is empty or not a known result status."
+    "RESULT_STATUS_INVALID": "OBX-11 is empty or not a known result status.",
+    "PATIENT_IDENTIFIER_MISSING": "PID-3 carries no identifier, so the message has no MRN to key on.",
+    "FIELD_VALUE_INVALID": "A field required by the pipeline cannot be read as its HL7 data type."
   },
   "warning_codes": {
     "SEGMENT_TERMINATOR_NOT_CR": "Segments are terminated with LF or CRLF instead of CR.",
