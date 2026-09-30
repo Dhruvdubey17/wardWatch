@@ -41,7 +41,8 @@ python-setup:
 	cd python && uv run pre-commit install
 
 FRONTEND := frontend
-PNPM := $(or $(wildcard $(TOOLS_DIR)/node/node_modules/.bin/pnpm),pnpm) --dir $(FRONTEND)
+# make setup installs pnpm under .tools; CI passes PNPM="pnpm --dir frontend".
+PNPM := $(TOOLS_DIR)/node/node_modules/.bin/pnpm --dir $(FRONTEND)
 
 # Playwright's browsers live under .tools so nothing is written to the home directory.
 export PLAYWRIGHT_BROWSERS_PATH := $(TOOLS_DIR)/playwright
