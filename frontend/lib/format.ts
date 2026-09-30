@@ -33,8 +33,10 @@ function withUnit(value: string, unit: string): string {
   return `${value} ${unit}`;
 }
 
+// Whole numbers and values of 100 or more need no decimals; a temperature of
+// 38.9 must not read as 39.
 function digitsFor(value: number): number {
-  return Number.isInteger(value) || Math.abs(value) >= 10 ? 0 : 1;
+  return Number.isInteger(value) || Math.abs(value) >= 100 ? 0 : 1;
 }
 
 /**
@@ -53,6 +55,7 @@ export function formatFactor(factor: Factor): string {
   }
   const value = withUnit(formatNumber(factor.value, digitsFor(factor.value)), factor.unit);
   if (!detail || detail === "latest") return `${name} ${value}`;
+  if (detail === "hours since last measured") return `${name} last measured ${value} ago`;
   if (detail === "measured this hour")
     return factor.value ? `${name} measured this hour` : `${name} not measured this hour`;
   return `${name} ${value} (${detail})`;

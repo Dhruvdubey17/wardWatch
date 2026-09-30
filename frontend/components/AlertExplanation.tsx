@@ -1,15 +1,17 @@
-import type { AlertView } from "@/lib/api/client";
-import { NEWS2_COMPONENTS, sourceLabel, STATUS_LABEL } from "@/lib/alerts";
+import type { AlertView, CensusBed } from "@/lib/api/client";
+import { NEWS2_COMPONENTS, patientLabel, sourceLabel, STATUS_LABEL } from "@/lib/alerts";
 import { formatDuration, formatFactor, formatProbability } from "@/lib/format";
 import type { ReactNode } from "react";
 import { SeverityBadge } from "./SeverityBadge";
 
 export function AlertExplanation({
   alert,
+  patient,
   now,
   children,
 }: {
   alert: AlertView;
+  patient?: CensusBed | undefined;
   now: Date;
   children?: ReactNode;
 }) {
@@ -21,10 +23,11 @@ export function AlertExplanation({
       <header className="mb-3 flex flex-wrap items-start justify-between gap-2">
         <div>
           <h2 id={`alert-${alert.id}-heading`} className="text-lg font-semibold">
-            {sourceLabel(alert.source)} alert for {alert.mrn}
+            {sourceLabel(alert.source)} alert for {patientLabel(alert, patient)}
           </h2>
           <p className="text-sm text-slate-600">
-            ICU hour {alert.icu_hour} · {STATUS_LABEL[alert.status] ?? alert.status} · open for{" "}
+            {patient && <>{alert.mrn} · </>}ICU hour {alert.icu_hour} ·{" "}
+            {STATUS_LABEL[alert.status] ?? alert.status} · open for{" "}
             {formatDuration(alert.raised_at, now)}
             {alert.updated_by && <> · last changed by {alert.updated_by}</>}
           </p>

@@ -2,8 +2,15 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useState, type KeyboardEvent } from "react";
-import { listAlerts, type AlertView } from "@/lib/api/client";
-import { alertSeverity, sortAlerts, sourceLabel, STATUS_LABEL, UNRESOLVED } from "@/lib/alerts";
+import { getCensus, listAlerts, type AlertView, type CensusBed } from "@/lib/api/client";
+import {
+  alertSeverity,
+  patientLabel,
+  sortAlerts,
+  sourceLabel,
+  STATUS_LABEL,
+  UNRESOLVED,
+} from "@/lib/alerts";
 import { formatDuration, formatProbability } from "@/lib/format";
 import { SEVERITY_STYLE } from "@/lib/severity";
 import { useNow } from "@/hooks/useNow";
@@ -15,11 +22,13 @@ export const INBOX_QUERY_KEY = ["alerts", "unresolved"] as const;
 
 function AlertRow({
   alert,
+  patient,
   now,
   selected,
   onSelect,
 }: {
   alert: AlertView;
+  patient: CensusBed | undefined;
   now: Date;
   selected: boolean;
   onSelect: () => void;
@@ -39,7 +48,7 @@ function AlertRow({
         <span aria-hidden="true">{style.symbol} </span>
         {style.label}
       </span>
-      <span className="font-medium">{alert.mrn}</span>
+      <span className="font-medium">{patientLabel(alert, patient)}</span>
       <span className="block text-sm text-slate-600">
         {sourceLabel(alert.source)} · {formatProbability(alert.calibrated_probability)} ·{" "}
         {STATUS_LABEL[alert.status] ?? alert.status} · open {formatDuration(alert.raised_at, now)}
@@ -76,6 +85,9 @@ export function AlertInbox() {
     queryFn: () => listAlerts([...UNRESOLVED]),
     select: sortAlerts,
   });
+  // The census is usually cached from the ward board; it only adds names and beds.
+  const census = useQuery({ queryKey: ["census"], queryFn: getCensus });
+  const patients = new Map(census.data?.map((bed) => [bed.mrn, bed]));
   const now = useNow();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   return (
@@ -95,6 +107,7 @@ export function AlertInbox() {
                 <li key={alert.id}>
                   <AlertRow
                     alert={alert}
+                    patient={patients.get(alert.mrn)}
                     now={now}
                     selected={alert.id === selected.id}
                     onSelect={() => setSelectedId(alert.id)}
@@ -105,7 +118,7 @@ export function AlertInbox() {
             <p id="inbox-keys" className="sr-only">
               Use the up and down arrow keys to move between alerts.
             </p>
-            <AlertExplanation alert={selected} now={now}>
+            <AlertExplanation alert={selected} patient={patients.get(selected.mrn)} now={now}>
               {/* Keyed by alert so the form starts empty for each alert. */}
               <AlertActions key={selected.id} alert={selected} listKey={INBOX_QUERY_KEY} />
             </AlertExplanation>

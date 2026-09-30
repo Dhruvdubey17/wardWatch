@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 // The browser calls the FHIR service through this origin, so no CORS setup is
-// needed. WARDWATCH_API_URL is read when the server starts.
+// needed. Next.js fixes rewrites at build time, so WARDWATCH_API_URL must be set for `next build`.
 const apiUrl = process.env.WARDWATCH_API_URL ?? "http://127.0.0.1:8000";
 
 const config: NextConfig = {

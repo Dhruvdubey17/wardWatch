@@ -1,4 +1,4 @@
-import type { AlertView, News2 } from "./api/client";
+import type { AlertView, CensusBed, News2 } from "./api/client";
 import { news2Severity, SEVERITY_RANK, type Severity } from "./severity";
 
 export const UNRESOLVED = ["open", "acknowledged", "escalated"] as const;
@@ -43,3 +43,8 @@ export const STATUS_LABEL: Record<string, string> = {
   escalated: "Escalated",
   resolved: "Resolved",
 };
+
+/** "Ada Okafor, bed ICU-01" when the patient is on the census, else the MRN. */
+export function patientLabel(alert: AlertView, patient: CensusBed | undefined): string {
+  return patient ? `${patient.name.given} ${patient.name.family}, bed ${patient.bed}` : alert.mrn;
+}

@@ -2,7 +2,7 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { AlertInbox } from "@/components/AlertInbox";
-import { alertView, NOW } from "./support/fixtures";
+import { alertView, censusBed, NOW } from "./support/fixtures";
 import { renderWithClient } from "./support/render";
 import { server } from "./support/server";
 
@@ -83,4 +83,18 @@ test("an empty inbox", async () => {
   server.use(http.get("*/api/alerts", () => HttpResponse.json([])));
   renderWithClient(<AlertInbox />);
   expect(await screen.findByText("No unresolved alerts.")).toBeInTheDocument();
+});
+
+test("rows name the patient and bed when the patient is on the census", async () => {
+  server.use(
+    http.get("*/api/alerts", () => HttpResponse.json([alertView(), news2Alert])),
+    http.get("*/api/ward/census", () => HttpResponse.json([censusBed()])),
+  );
+  renderWithClient(<AlertInbox />);
+  expect(await screen.findByRole("button", { name: /Ada Okafor, bed ICU-01/ })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /MRN-N2/ })).toBeInTheDocument();
+  const panel = screen.getByRole("region", {
+    name: "Sepsis model alert for Ada Okafor, bed ICU-01",
+  });
+  expect(within(panel).getByText(/MRN-001 · ICU hour 14/)).toBeInTheDocument();
 });

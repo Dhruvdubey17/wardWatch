@@ -43,9 +43,12 @@ test.each([
   ["Lactate, latest", "mmol/L", 3.1, "Lactate 3.1 mmol/L"],
   ["SpO2, latest", "%", 91, "SpO2 91%"],
   ["Heart rate, highest over 6 h", "/min", 131, "Heart rate 131/min (highest over 6 h)"],
+  ["Temperature, highest over 6 h", "°C", 38.93, "Temperature 38.9 °C (highest over 6 h)"],
+  ["Heart rate, latest", "/min", 131.4, "Heart rate 131/min"],
+  ["Respiratory rate, change over 6 h", "/min", 8.4, "Respiratory rate up 8.4/min over 6 h"],
   ["Lactate, measured this hour", "", 1, "Lactate measured this hour"],
   ["Lactate, measured this hour", "", 0, "Lactate not measured this hour"],
-  ["Lactate, hours since last measured", "h", 5, "Lactate 5 h (hours since last measured)"],
+  ["Lactate, hours since last measured", "h", 5, "Lactate last measured 5 h ago"],
   ["NEWS2 total", "points", 7, "NEWS2 total 7 points"],
   ["Inspired oxygen fraction, latest", "", 0.4, "Inspired oxygen fraction 0.4"],
 ])("%s = %d reads as %s", (label, unit, value, expected) => {
