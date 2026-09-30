@@ -154,3 +154,14 @@ jobs:
       - run: cd python && uv sync --frozen
       - run: make python-test-integration
       - run: make python-coverage
+
+  ml-smoke:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: python/uv.lock
+      - run: cd python && uv sync --frozen
+      - run: make ml-smoke

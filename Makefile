@@ -21,7 +21,7 @@ CPP_SOURCES = $(shell cd $(INGEST) && for f in $$(git ls-files -co --exclude-sta
 py_test_dirs = $(shell cd python && for d in tests/$(1) ../scripts/tests/$(1) $(addsuffix /tests/$(1),$(PY_PACKAGES)); do \
 	ls $$d/test_*.py >/dev/null 2>&1 && echo $$d; done)
 
-.PHONY: python-coverage python-env python-setup python-lint python-test-unit python-test-integration
+.PHONY: ml-smoke python-coverage python-env python-setup python-lint python-test-unit python-test-integration
 .PHONY: ingest-coverage ingest-build ingest-lint ingest-test-unit ingest-test-integration ingest-sanitize ingest-fuzz
 .PHONY: format help setup setup-tools data lint lint-prose test-unit test-integration test \
 	sanitize fuzz bench train eval coverage check up demo down autopilot
@@ -122,6 +122,11 @@ bench:
 		--benchmark_report_aggregates_only=true --benchmark_out_format=json \
 		--benchmark_out=bench/results/micro-release.json
 	@echo "bench: wrote ingest/bench/results/micro-release.json"
+
+# The whole ML pipeline on the committed fixtures with tiny models, for CI.
+ml-smoke: python-env
+	cd python && uv run wardwatch-ml eval --smoke --data-dir ml/tests/fixtures/physionet \
+		--reports-dir ../.tools/ml-smoke-reports --bootstrap-resamples 100
 
 train: python-env
 	@test -d data/physionet/training_setA || { echo "train: run make data first" >&2; exit 1; }
