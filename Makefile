@@ -23,7 +23,7 @@ py_test_dirs = $(shell cd python && for d in tests/$(1) ../scripts/tests/$(1) $(
 
 .PHONY: ml-smoke openapi python-coverage python-env python-setup python-lint python-test-unit python-test-integration
 .PHONY: ingest-coverage ingest-build ingest-lint ingest-test-unit ingest-test-integration ingest-sanitize ingest-fuzz
-.PHONY: frontend-setup frontend-lint frontend-test-unit frontend-test-e2e frontend-coverage
+.PHONY: frontend-setup frontend-lint frontend-test-unit frontend-test-e2e frontend-test-e2e-local frontend-coverage
 .PHONY: format help setup setup-tools data lint lint-prose test-unit test-integration test \
 	sanitize fuzz bench train eval coverage check up demo down autopilot
 
@@ -43,8 +43,12 @@ python-setup:
 FRONTEND := frontend
 PNPM := $(or $(wildcard $(TOOLS_DIR)/node/node_modules/.bin/pnpm),pnpm) --dir $(FRONTEND)
 
+# Playwright's browsers live under .tools so nothing is written to the home directory.
+export PLAYWRIGHT_BROWSERS_PATH := $(TOOLS_DIR)/playwright
+
 frontend-setup:
 	$(PNPM) install --frozen-lockfile
+	$(PNPM) exec playwright install chromium
 
 setup: setup-tools python-setup frontend-setup
 
@@ -63,9 +67,14 @@ frontend-test-unit:
 frontend-coverage:
 	$(PNPM) test:coverage
 
-# Needs the compose stack from `make up`.
+# Needs a fresh stack: the compose stack from `make up`, or the local one below.
 frontend-test-e2e:
 	$(PNPM) test:e2e
+
+# The end to end suite against scripts/local_stack.sh, for machines without Docker.
+frontend-test-e2e-local:
+	./scripts/local_stack.sh start
+	$(PNPM) test:e2e; status=$$?; ./scripts/local_stack.sh stop; exit $$status
 
 python-lint:
 	cd python && uv run ruff check --config pyproject.toml . ../scripts && uv run ruff format --config pyproject.toml --check . ../scripts

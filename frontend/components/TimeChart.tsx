@@ -32,7 +32,13 @@ export function TimeChart({
     <figure className="rounded-lg border border-slate-200 bg-white p-4">
       <figcaption className="mb-2 font-medium">{heading}</figcaption>
       <div aria-hidden="true">
-        <LineChart responsive data={points} style={{ width: "100%", height: 180 }}>
+        {/* Hidden from assistive technology, so it must not take keyboard focus either. */}
+        <LineChart
+          responsive
+          accessibilityLayer={false}
+          data={points}
+          style={{ width: "100%", height: 180 }}
+        >
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis
             dataKey="at"

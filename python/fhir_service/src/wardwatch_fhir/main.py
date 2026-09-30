@@ -13,6 +13,8 @@ from wardwatch_fhir.log_config import configure_logging
 from wardwatch_fhir.migrate import upgrade
 from wardwatch_fhir.settings import Settings
 
+SHUTDOWN_GRACE_SECONDS = 5
+
 
 def openapi_document() -> dict[str, object]:
     app = create_app(Settings(run_consumers=False))
@@ -38,7 +40,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     configure_logging(settings.log_level)
     upgrade(settings.database_url)
     if args.command == "serve":
-        uvicorn.run(create_app(settings), host=args.host, port=args.port, log_config=None)
+        # Event stream connections never end on their own, so shutdown gives them
+        # a few seconds and then closes them instead of waiting forever.
+        uvicorn.run(
+            create_app(settings),
+            host=args.host,
+            port=args.port,
+            log_config=None,
+            timeout_graceful_shutdown=SHUTDOWN_GRACE_SECONDS,
+        )
     return 0
 
 
