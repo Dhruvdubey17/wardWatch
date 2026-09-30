@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-24.04
     services:
       kafka:
-        image: apache/kafka:3.8.0
+        image: apache/kafka:3.9.1
         ports: ["9092:9092"]
     env:
       WARDWATCH_KAFKA_BROKERS: 127.0.0.1:9092
@@ -95,7 +95,7 @@ jobs:
     runs-on: ubuntu-24.04
     services:
       kafka:
-        image: apache/kafka:3.8.0
+        image: apache/kafka:3.9.1
         ports: ["9092:9092"]
     env:
       WARDWATCH_KAFKA_BROKERS: 127.0.0.1:9092
@@ -113,7 +113,15 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - run: docker build -f ingest/Dockerfile -t wardwatch-ingest:ci .
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ingest/Dockerfile
+          tags: wardwatch-ingest:ci
+          load: false
+          cache-from: type=gha,scope=ingest
+          cache-to: type=gha,mode=max,scope=ingest
 
   python-lint:
     runs-on: ubuntu-24.04
@@ -173,7 +181,16 @@ jobs:
         service: [wardwatch-fhir, wardwatch-scorer, wardwatch-sim]
     steps:
       - uses: actions/checkout@v4
-      - run: docker build -f python/Dockerfile --build-arg SERVICE=${{ matrix.service }} -t ${{ matrix.service }}:ci .
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: python/Dockerfile
+          build-args: SERVICE=${{ matrix.service }}
+          tags: ${{ matrix.service }}:ci
+          load: false
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
 
   frontend-lint:
     runs-on: ubuntu-24.04
@@ -210,7 +227,14 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - run: docker build -t wardwatch-frontend:ci frontend
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          tags: wardwatch-frontend:ci
+          load: false
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
 
   stack-smoke:
     runs-on: ubuntu-24.04
@@ -251,3 +275,34 @@ jobs:
           path: frontend/playwright-report
       - if: always()
         run: make down
+
+  # The one check branch protection needs to require: it passes only when every job above passed.
+  ci-passed:
+    runs-on: ubuntu-24.04
+    if: always()
+    needs:
+      - prose-lint
+      - contracts
+      - fuzz
+      - cpp-release
+      - cpp-asan
+      - cpp-tsan
+      - cpp-coverage
+      - ingest-image
+      - python-lint
+      - python-unit
+      - python-integration
+      - ml-smoke
+      - python-images
+      - frontend-lint
+      - frontend-unit
+      - frontend-image
+      - stack-smoke
+      - frontend-e2e
+    steps:
+      - name: Every job passed
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}" == "true" ]]; then
+            echo "a required job did not pass" >&2
+            exit 1
+          fi

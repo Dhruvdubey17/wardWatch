@@ -97,3 +97,52 @@ def test_dashboard_datasource_matches_provisioning() -> None:
         (INFRA / "grafana" / "provisioning" / "datasources" / "prometheus.yml").read_text()
     )
     assert [source["uid"] for source in provisioned["datasources"]] == ["wardwatch-prometheus"]
+
+
+REQUIRED_JOBS = {
+    "cpp-release",
+    "cpp-asan",
+    "cpp-tsan",
+    "cpp-coverage",
+    "fuzz",
+    "python-lint",
+    "python-unit",
+    "python-integration",
+    "ml-smoke",
+    "frontend-lint",
+    "frontend-unit",
+    "frontend-e2e",
+    "stack-smoke",
+    "prose-lint",
+}
+
+
+def workflow() -> dict[str, Any]:
+    document: dict[str, Any] = yaml.safe_load(
+        (REPO / ".github" / "workflows" / "ci.yml").read_text()
+    )
+    return document
+
+
+def test_ci_has_every_job_from_the_brief() -> None:
+    assert set(workflow()["jobs"]) >= REQUIRED_JOBS
+
+
+def test_no_ci_job_may_fail() -> None:
+    for name, job in workflow()["jobs"].items():
+        assert "continue-on-error" not in job, name
+        for step in job.get("steps", []):
+            assert "continue-on-error" not in step, name
+
+
+def test_the_aggregate_check_needs_every_other_job() -> None:
+    jobs = workflow()["jobs"]
+    assert set(jobs["ci-passed"]["needs"]) == set(jobs) - {"ci-passed"}
+
+
+def test_ci_uses_the_same_kafka_as_the_stack() -> None:
+    images = re.findall(
+        r"apache/kafka:\S+", (REPO / ".github" / "workflows" / "ci.yml").read_text()
+    )
+    assert images
+    assert set(images) == {compose()["services"]["kafka"]["image"]}
