@@ -5,6 +5,8 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
 
+from wardwatch_fhir.converter import Converted
+
 SUBSCRIBER_QUEUE_SIZE = 1000
 
 
@@ -33,3 +35,18 @@ class EventBus:
             yield queue
         finally:
             self._subscribers.discard(queue)
+
+
+def vitals_event(converted: Converted) -> dict[str, Any] | None:
+    """The stream event for a stored result message, or None when it held no Observations."""
+    if not converted.observations:
+        return None
+    return {
+        "type": "vitals",
+        "mrn": converted.mrn,
+        "encounter_id": converted.encounter_id,
+        "at": max(observation["effectiveDateTime"] for observation in converted.observations),
+        "codes": sorted(
+            {observation["code"]["coding"][0]["code"] for observation in converted.observations}
+        ),
+    }

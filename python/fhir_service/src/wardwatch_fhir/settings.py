@@ -21,5 +21,7 @@ class Settings(BaseSettings):
     # Alerts left open this long are escalated by the service itself.
     auto_escalate_after_minutes: float = Field(default=15.0, gt=0)
     auto_escalate_interval_seconds: float = Field(default=30.0, gt=0)
+    # Comment lines on the event stream keep proxies from closing idle connections.
+    sse_heartbeat_seconds: float = Field(default=15.0, gt=0)
     run_consumers: bool = True
     log_level: str = "INFO"

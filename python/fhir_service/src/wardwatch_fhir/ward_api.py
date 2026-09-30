@@ -5,10 +5,13 @@ transition the workflow does not allow gets 409; both bodies carry the alert
 as it now is, including who changed it last.
 """
 
+import asyncio
+import json
+from collections.abc import AsyncIterator
 from typing import Annotated, Any, Literal, get_args
 
 from fastapi import APIRouter, Header, Query, Request, Response
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from wardwatch_fhir.alert_service import (
@@ -165,3 +168,33 @@ async def vitals(
     if result is None:
         return _error(404, f"patient {mrn} is not known")
     return result
+
+
+# EventSource reconnects after this many milliseconds when the stream drops.
+RECONNECT_MILLISECONDS = 3000
+
+
+@router.get("/stream")
+async def stream(request: Request) -> StreamingResponse:
+    """Server-Sent Events: vitals, score and alert changes as they happen."""
+    bus = request.app.state.bus
+    heartbeat = request.app.state.settings.sse_heartbeat_seconds
+
+    async def events() -> AsyncIterator[str]:
+        yield f"retry: {RECONNECT_MILLISECONDS}\n\n"
+        async with bus.subscribe() as queue:
+            sequence = 0
+            while not await request.is_disconnected():
+                try:
+                    event = await asyncio.wait_for(queue.get(), timeout=heartbeat)
+                except TimeoutError:
+                    yield ": keep-alive\n\n"
+                    continue
+                sequence += 1
+                yield f"id: {sequence}\nevent: {event['type']}\ndata: {json.dumps(event)}\n\n"
+
+    return StreamingResponse(
+        events(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
