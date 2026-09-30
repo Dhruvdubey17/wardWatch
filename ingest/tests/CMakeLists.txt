@@ -27,5 +27,7 @@ if(WARDWATCH_HAVE_KAFKA)
     WARDWATCH_CONTRACTS_DIR="${WARDWATCH_CONTRACTS_DIR}"
     WARDWATCH_INGEST_BINARY="$<TARGET_FILE:wardwatch-ingest>")
   add_dependencies(wardwatch_kafka_tests wardwatch-ingest)
-  gtest_discover_tests(wardwatch_kafka_tests PROPERTIES LABELS "integration;kafka" DISCOVERY_TIMEOUT 60)
+  # One label only: CMake 3.28's gtest_discover_tests keeps just the first value
+  # of a list-valued LABELS, which left this test unlabelled as kafka on Ubuntu.
+  gtest_discover_tests(wardwatch_kafka_tests PROPERTIES LABELS kafka DISCOVERY_TIMEOUT 60)
 endif()

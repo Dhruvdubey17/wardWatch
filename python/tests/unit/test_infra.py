@@ -208,3 +208,13 @@ def test_sanitizer_and_coverage_jobs_install_the_clang_runtimes() -> None:
     for name in ("cpp-asan", "cpp-tsan", "cpp-coverage", "fuzz"):
         installs = [step.get("run", "") for step in jobs[name]["steps"]]
         assert any("libclang-rt-19-dev" in run for run in installs), name
+
+
+def test_ctest_labels_are_single_values() -> None:
+    # CMake 3.28's gtest_discover_tests keeps only the first value of a list in
+    # PROPERTIES LABELS, so "integration;kafka" lost its kafka label on Ubuntu
+    # and `ctest --label-regex kafka` found no tests.
+    cmake = (REPO / "ingest" / "tests" / "CMakeLists.txt").read_text()
+    labels = re.findall(r"gtest_discover_tests\([^)]*\bLABELS\s+(\S+)", cmake)
+    assert sorted(labels) == ["integration", "kafka", "unit"]
+    assert not any(";" in label for label in labels)
