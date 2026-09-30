@@ -10,7 +10,11 @@ dependencies = [
     "xgboost>=2.1",
     "torch>=2.4",
     "shap>=0.46",
+    "matplotlib>=3.9",
 ]
+
+[project.scripts]
+wardwatch-ml = "wardwatch_ml.cli:main"
 
 [build-system]
 requires = ["hatchling>=1.25"]

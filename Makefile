@@ -126,8 +126,9 @@ bench:
 train:
 	@echo "train: added in Phase 3"
 
-eval:
-	@echo "eval: added in Phase 3 task P3.11"
+eval: python-env
+	@test -d data/physionet/training_setA || { echo "eval: run make data first" >&2; exit 1; }
+	cd python && uv run wardwatch-ml eval
 
 ingest-coverage:
 	./scripts/ingest_coverage.sh

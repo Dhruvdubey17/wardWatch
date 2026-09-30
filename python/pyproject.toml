@@ -75,4 +75,9 @@ markers = [
     "unit: in-process test with no network, no Docker and no real clock",
     "integration: test that crosses a real boundary (socket, subprocess, Postgres, Kafka, HTTP)",
 ]
-filterwarnings = ["error"]
+filterwarnings = [
+    "error",
+    # shap's colour module calls a matplotlib method matplotlib plans to
+    # deprecate; the warning comes from importing shap, not from our code.
+    "ignore:The set_(bad|over|under) function will be deprecated:PendingDeprecationWarning:shap",
+]

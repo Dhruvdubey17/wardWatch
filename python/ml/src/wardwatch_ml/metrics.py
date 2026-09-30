@@ -94,6 +94,9 @@ def utility_components(stays: Sequence[tuple[npt.ArrayLike, npt.ArrayLike]]) -> 
 def normalized_from_components(components: np.ndarray, weights: np.ndarray | None = None) -> float:
     weight = np.ones(len(components)) if weights is None else weights
     observed, best, inaction = (weight[:, None] * components).sum(axis=0)
+    if best == inaction:
+        # No septic stay was drawn, so there is nothing to normalize against.
+        return float("nan")
     return float((observed - inaction) / (best - inaction))
 
 
