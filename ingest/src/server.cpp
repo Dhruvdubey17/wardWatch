@@ -518,10 +518,11 @@ void Server::run_validation() {
     std::uint64_t ack_sequence = 0;
 
     const auto publish = [&](Topic topic, std::string_view key, std::string_view payload) {
-        const bool delivered = sink_.publish(topic, key, payload);
-        (delivered ? metrics_.sink_delivered : metrics_.sink_failed)
-            .fetch_add(1, std::memory_order_relaxed);
-        return delivered;
+        const bool accepted = sink_.publish(topic, key, payload);
+        if (!accepted) {
+            metrics_.sink_refused.fetch_add(1, std::memory_order_relaxed);
+        }
+        return accepted;
     };
 
     const auto handle = [&](InboundFrame item) {
@@ -629,9 +630,9 @@ void Server::run_validation() {
         inbound_wakeup_.wait(epoch);
     }
 
-    if (!sink_.flush(config_.drain_timeout)) {
-        metrics_.sink_failed.fetch_add(1, std::memory_order_relaxed);
-    }
+    // Records still undelivered after the timeout are reported by the sink
+    // through the delivery counters.
+    [[maybe_unused]] const bool flushed = sink_.flush(config_.drain_timeout);
     validation_done_.store(true, std::memory_order_release);
     wake_io();
 }

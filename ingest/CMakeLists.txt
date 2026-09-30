@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(wardwatch_ingest LANGUAGES CXX)
+project(wardwatch_ingest LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -9,6 +9,7 @@ option(WARDWATCH_BUILD_TESTS "Build unit and integration tests" ON)
 option(WARDWATCH_BUILD_BENCH "Build benchmarks" OFF)
 option(WARDWATCH_FUZZ "Build libFuzzer targets" OFF)
 option(WARDWATCH_COVERAGE "Instrument for source-based coverage" OFF)
+option(WARDWATCH_FETCH_RDKAFKA "Build librdkafka from source when the system has none" ON)
 set(WARDWATCH_SANITIZERS "" CACHE STRING "Sanitizers to enable, for example address;undefined or thread")
 
 get_filename_component(WARDWATCH_REPO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/.." ABSOLUTE)

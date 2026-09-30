@@ -72,9 +72,13 @@ std::string render_metrics(const Metrics& metrics, const RuntimeGauges& gauges) 
                   "Bytes received outside any MLLP frame and dropped.",
                   load(metrics.bytes_outside_frames));
     append_sample(out, "wardwatch_ingest_sink_delivered_total", "counter",
-                  "Records the sink confirmed as delivered.", load(metrics.sink_delivered));
+                  "Records the sink confirmed as delivered.", load(metrics.delivery.delivered));
     append_sample(out, "wardwatch_ingest_sink_failed_total", "counter",
-                  "Records the sink failed to deliver.", load(metrics.sink_failed));
+                  "Records the sink failed to deliver after accepting them.",
+                  load(metrics.delivery.failed));
+    append_sample(out, "wardwatch_ingest_sink_refused_total", "counter",
+                  "Records the sink refused at publish time; those messages were not acknowledged.",
+                  load(metrics.sink_refused));
 
     append_header(out, "wardwatch_ingest_ring_occupancy", "gauge",
                   "Items waiting in each SPSC ring.");

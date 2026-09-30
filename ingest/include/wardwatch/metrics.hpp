@@ -40,6 +40,13 @@ class LatencyHistogram {
     std::atomic<std::uint64_t> sum_nanos_{0};
 };
 
+// Outcomes a sink reports once it knows them. For Kafka that is in the
+// delivery callback, well after publish() returned.
+struct DeliveryCounters {
+    std::atomic<std::uint64_t> delivered{0};
+    std::atomic<std::uint64_t> failed{0};
+};
+
 // Counters shared by the I/O and validation threads. Every update is a relaxed
 // increment: the values are only read for reporting, never to coordinate.
 struct Metrics {
@@ -53,8 +60,9 @@ struct Metrics {
     std::array<std::atomic<std::uint64_t>, kWarningCodeCount> warnings{};
     std::atomic<std::uint64_t> backpressure_events{0};
     std::atomic<std::uint64_t> bytes_outside_frames{0};
-    std::atomic<std::uint64_t> sink_delivered{0};
-    std::atomic<std::uint64_t> sink_failed{0};
+    // Records the sink refused outright; the message went unacknowledged.
+    std::atomic<std::uint64_t> sink_refused{0};
+    DeliveryCounters delivery;
     LatencyHistogram parse_latency;
 
     void count_rejection(ErrorCode code) noexcept {
