@@ -17,6 +17,7 @@
 #include "wardwatch/ack.hpp"
 #include "wardwatch/payload.hpp"
 #include "wardwatch/poller.hpp"
+#include "wardwatch/socket_io.hpp"
 #include "wardwatch/validator.hpp"
 
 namespace wardwatch {
@@ -29,12 +30,6 @@ constexpr std::size_t kReadChunk = std::size_t{64} * 1024;
 constexpr int kListenBacklog = 512;
 constexpr std::chrono::milliseconds kIdlePoll{50};
 constexpr std::chrono::milliseconds kBlockedPoll{1};
-
-#ifdef __linux__
-constexpr int kSendFlags = MSG_NOSIGNAL;
-#else
-constexpr int kSendFlags = 0;
-#endif
 
 std::string errno_message(std::string_view what) {
     return std::format("{}: {}", what, std::error_code(errno, std::generic_category()).message());
@@ -52,10 +47,7 @@ void configure_client_socket(int fd) {
     // ACKs are small and latency-sensitive; Nagle would hold them back.
     const int enabled = 1;
     ::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &enabled, sizeof(enabled));
-#ifdef __APPLE__
-    // macOS has no MSG_NOSIGNAL, so SIGPIPE is suppressed per socket.
-    ::setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &enabled, sizeof(enabled));
-#endif
+    suppress_sigpipe(fd);
 }
 
 bool would_block() noexcept { return errno == EAGAIN || errno == EWOULDBLOCK; }
@@ -286,9 +278,9 @@ class Server::IoLoop {
 
     void flush(Connection& connection) {
         while (connection.write_offset < connection.write_buffer.size()) {
-            const auto sent =
-                ::send(connection.fd, connection.write_buffer.data() + connection.write_offset,
-                       connection.write_buffer.size() - connection.write_offset, kSendFlags);
+            const auto sent = send_no_signal(
+                connection.fd, connection.write_buffer.data() + connection.write_offset,
+                connection.write_buffer.size() - connection.write_offset);
             if (sent > 0) {
                 connection.write_offset += static_cast<std::size_t>(sent);
                 continue;

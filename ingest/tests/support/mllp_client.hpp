@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "wardwatch/mllp.hpp"
+#include "wardwatch/socket_io.hpp"
 
 namespace wardwatch::testing {
 
@@ -31,10 +32,9 @@ class MllpClient {
             ::connect(fd_, reinterpret_cast<sockaddr*>(&address), sizeof(address)) != 0) {
             throw std::runtime_error("connect failed");
         }
-#if defined(__APPLE__)
-        const int enabled = 1;
-        ::setsockopt(fd_, SOL_SOCKET, SO_NOSIGPIPE, &enabled, sizeof(enabled));
-#endif
+        // Tests send to servers that are shutting down, and a write after the
+        // server closes must fail with EPIPE rather than kill the test binary.
+        suppress_sigpipe(fd_);
     }
     MllpClient(const MllpClient&) = delete;
     MllpClient& operator=(const MllpClient&) = delete;
@@ -49,7 +49,7 @@ class MllpClient {
     void send_raw(std::string_view bytes) const {
         std::size_t sent = 0;
         while (sent < bytes.size()) {
-            const auto result = ::send(fd_, bytes.data() + sent, bytes.size() - sent, 0);
+            const auto result = send_no_signal(fd_, bytes.data() + sent, bytes.size() - sent);
             if (result <= 0) {
                 throw std::runtime_error("send failed");
             }

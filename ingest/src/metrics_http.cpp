@@ -11,6 +11,8 @@
 #include <system_error>
 #include <unistd.h>
 
+#include "wardwatch/socket_io.hpp"
+
 namespace wardwatch {
 namespace {
 
@@ -113,6 +115,7 @@ void MetricsHttpServer::serve() {
         if (client < 0) {
             continue;
         }
+        suppress_sigpipe(client);
         answer(client);
         ::close(client);
     }
@@ -146,7 +149,7 @@ void MetricsHttpServer::answer(int client_fd) const {
     const std::string full = head + response.body;
     std::size_t sent = 0;
     while (sent < full.size()) {
-        const auto written = ::send(client_fd, full.data() + sent, full.size() - sent, 0);
+        const auto written = send_no_signal(client_fd, full.data() + sent, full.size() - sent);
         if (written <= 0) {
             return;
         }

@@ -15,8 +15,8 @@ jobs:
   prose-lint:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
         with:
           enable-cache: true
           cache-dependency-glob: python/uv.lock
@@ -27,8 +27,8 @@ jobs:
   contracts:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
         with:
           enable-cache: true
           cache-dependency-glob: python/uv.lock
@@ -38,13 +38,13 @@ jobs:
   fuzz:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install clang with the libFuzzer runtime
         # Ubuntu 24.04's default clang 18 cannot use libstdc++'s std::expected.
         run: |
           sudo apt-get update && sudo apt-get install -y clang-19 libclang-rt-19-dev ninja-build
           echo /usr/lib/llvm-19/bin >> "$GITHUB_PATH"
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ingest/build/fuzz/_deps
           key: fuzz-deps-${{ hashFiles('ingest/cmake/Dependencies.cmake', 'ingest/fuzz/CMakeLists.txt') }}
@@ -59,13 +59,13 @@ jobs:
     env:
       WARDWATCH_KAFKA_BROKERS: 127.0.0.1:9092
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install toolchain
         # Ubuntu 24.04's default clang 18 cannot use libstdc++'s std::expected.
         run: |
           sudo apt-get update && sudo apt-get install -y clang-19 ninja-build librdkafka-dev pkg-config
           echo /usr/lib/llvm-19/bin >> "$GITHUB_PATH"
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ingest/build/release/_deps
           key: cpp-release-deps-${{ hashFiles('ingest/cmake/Dependencies.cmake') }}
@@ -76,13 +76,13 @@ jobs:
   cpp-asan:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install toolchain
         # Ubuntu 24.04's default clang 18 cannot use libstdc++'s std::expected.
         run: |
-          sudo apt-get update && sudo apt-get install -y clang-19 ninja-build librdkafka-dev pkg-config
+          sudo apt-get update && sudo apt-get install -y clang-19 libclang-rt-19-dev ninja-build librdkafka-dev pkg-config
           echo /usr/lib/llvm-19/bin >> "$GITHUB_PATH"
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ingest/build/asan/_deps
           key: cpp-asan-deps-${{ hashFiles('ingest/cmake/Dependencies.cmake') }}
@@ -91,13 +91,13 @@ jobs:
   cpp-tsan:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install toolchain
         # Ubuntu 24.04's default clang 18 cannot use libstdc++'s std::expected.
         run: |
-          sudo apt-get update && sudo apt-get install -y clang-19 ninja-build librdkafka-dev pkg-config
+          sudo apt-get update && sudo apt-get install -y clang-19 libclang-rt-19-dev ninja-build librdkafka-dev pkg-config
           echo /usr/lib/llvm-19/bin >> "$GITHUB_PATH"
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ingest/build/tsan/_deps
           key: cpp-tsan-deps-${{ hashFiles('ingest/cmake/Dependencies.cmake') }}
@@ -112,13 +112,13 @@ jobs:
     env:
       WARDWATCH_KAFKA_BROKERS: 127.0.0.1:9092
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install toolchain
         # Ubuntu 24.04's default clang 18 cannot use libstdc++'s std::expected.
         run: |
-          sudo apt-get update && sudo apt-get install -y clang-19 llvm-19 ninja-build librdkafka-dev pkg-config
+          sudo apt-get update && sudo apt-get install -y clang-19 libclang-rt-19-dev llvm-19 ninja-build librdkafka-dev pkg-config
           echo /usr/lib/llvm-19/bin >> "$GITHUB_PATH"
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ingest/build/coverage/_deps
           key: cpp-coverage-deps-${{ hashFiles('ingest/cmake/Dependencies.cmake') }}
@@ -127,9 +127,9 @@ jobs:
   ingest-image:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/build-push-action@v6
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/build-push-action@v7
         with:
           context: .
           file: ingest/Dockerfile
@@ -141,8 +141,8 @@ jobs:
   python-lint:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
         with:
           enable-cache: true
           cache-dependency-glob: python/uv.lock
@@ -152,8 +152,8 @@ jobs:
   python-unit:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
         with:
           enable-cache: true
           cache-dependency-glob: python/uv.lock
@@ -163,17 +163,17 @@ jobs:
   python-integration:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install toolchain
         # Ubuntu 24.04's default clang 18 cannot use libstdc++'s std::expected.
         run: |
           sudo apt-get update && sudo apt-get install -y clang-19 ninja-build librdkafka-dev pkg-config
           echo /usr/lib/llvm-19/bin >> "$GITHUB_PATH"
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v10
         with:
           enable-cache: true
           cache-dependency-glob: python/uv.lock
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ingest/build/debug/_deps
           key: cpp-debug-deps-${{ hashFiles('ingest/cmake/Dependencies.cmake') }}
@@ -184,8 +184,8 @@ jobs:
   ml-smoke:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
         with:
           enable-cache: true
           cache-dependency-glob: python/uv.lock
@@ -198,9 +198,9 @@ jobs:
       matrix:
         service: [wardwatch-fhir, wardwatch-scorer, wardwatch-sim]
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/build-push-action@v6
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/build-push-action@v7
         with:
           context: .
           file: python/Dockerfile
@@ -217,11 +217,11 @@ jobs:
   frontend-lint:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
         with:
           version: 9.15.9
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
@@ -232,11 +232,11 @@ jobs:
   frontend-unit:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
         with:
           version: 9.15.9
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
@@ -248,9 +248,9 @@ jobs:
   frontend-image:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/build-push-action@v6
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/build-push-action@v7
         with:
           context: frontend
           tags: wardwatch-frontend:ci
@@ -261,21 +261,21 @@ jobs:
   stack-smoke:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: make smoke
 
   frontend-e2e:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
         with:
           enable-cache: true
           cache-dependency-glob: python/uv.lock
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 9.15.9
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
@@ -291,7 +291,7 @@ jobs:
       - if: failure()
         run: docker compose -f infra/docker-compose.yml logs --tail 200
       - if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: frontend/playwright-report

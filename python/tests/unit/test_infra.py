@@ -178,3 +178,33 @@ def test_python_images_build_the_environment_where_it_runs() -> None:
     assert built is not None
     assert f"COPY --from=build {built.group(1)} {built.group(1)}" in dockerfile
     assert f"ENV PATH={built.group(1)}/bin:$PATH" in dockerfile
+
+
+# The first major of each action whose runtime is Node 24; older majors run on
+# Node 20, which GitHub is retiring from its runners.
+NODE24_MAJORS = {
+    "actions/checkout": 5,
+    "actions/setup-node": 5,
+    "actions/cache": 5,
+    "actions/upload-artifact": 5,
+    "astral-sh/setup-uv": 7,
+    "pnpm/action-setup": 5,
+    "docker/setup-buildx-action": 4,
+    "docker/build-push-action": 7,
+}
+
+
+def test_ci_actions_run_on_node_24() -> None:
+    workflow_text = (REPO / ".github" / "workflows" / "ci.yml").read_text()
+    used = re.findall(r"uses: ([\w.-]+/[\w.-]+)@v(\d+)", workflow_text)
+    assert {action for action, _ in used} == set(NODE24_MAJORS)
+    for action, major in used:
+        assert int(major) >= NODE24_MAJORS[action], f"{action}@v{major}"
+
+
+def test_sanitizer_and_coverage_jobs_install_the_clang_runtimes() -> None:
+    # Without libclang-rt-19-dev the link fails: libclang_rt.asan.a is not found.
+    jobs = workflow()["jobs"]
+    for name in ("cpp-asan", "cpp-tsan", "cpp-coverage", "fuzz"):
+        installs = [step.get("run", "") for step in jobs[name]["steps"]]
+        assert any("libclang-rt-19-dev" in run for run in installs), name

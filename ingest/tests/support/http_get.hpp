@@ -9,6 +9,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "wardwatch/socket_io.hpp"
+
 namespace wardwatch::testing {
 
 inline std::string http_get(std::uint16_t port, std::string_view path) {
@@ -22,7 +24,8 @@ inline std::string http_get(std::uint16_t port, std::string_view path) {
         return {};
     }
     const std::string request = "GET " + std::string(path) + " HTTP/1.1\r\nHost: x\r\n\r\n";
-    ::send(fd, request.data(), request.size(), 0);
+    suppress_sigpipe(fd);
+    send_no_signal(fd, request.data(), request.size());
     std::string response;
     std::array<char, 4096> buffer{};
     while (true) {
