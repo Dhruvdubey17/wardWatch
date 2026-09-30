@@ -47,7 +47,8 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"**/tests/**" = ["PLR0915", "PLC0415"]
+# pytest passes fixtures and parameters positionally, so test signatures grow.
+"**/tests/**" = ["PLR0915", "PLC0415", "PLR0917"]
 
 [tool.mypy]
 strict = true
