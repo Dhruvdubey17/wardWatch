@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, type KeyboardEvent } from "react";
 import { listAlerts, type AlertView } from "@/lib/api/client";
 import { alertSeverity, sortAlerts, sourceLabel, STATUS_LABEL, UNRESOLVED } from "@/lib/alerts";
 import { formatDuration, formatProbability } from "@/lib/format";
@@ -29,6 +29,9 @@ function AlertRow({
     <button
       type="button"
       aria-pressed={selected}
+      data-alert-id={alert.id}
+      // Only the selected row is a tab stop; the arrow keys move within the list.
+      tabIndex={selected ? 0 : -1}
       onClick={onSelect}
       className={`w-full rounded border p-3 text-left ${selected ? "border-slate-900 bg-slate-100" : "border-slate-200 bg-white"}`}
     >
@@ -43,6 +46,28 @@ function AlertRow({
       </span>
     </button>
   );
+}
+
+const MOVES: Record<string, (index: number, count: number) => number> = {
+  ArrowDown: (index, count) => Math.min(count - 1, index + 1),
+  ArrowUp: (index) => Math.max(0, index - 1),
+  Home: () => 0,
+  End: (_index, count) => count - 1,
+};
+
+/** Arrow keys, Home and End move through the list and select as they go. */
+function moveThroughList(event: KeyboardEvent<HTMLOListElement>, select: (id: string) => void) {
+  const move = MOVES[event.key];
+  if (!move) return;
+  const rows = [
+    ...event.currentTarget.querySelectorAll<HTMLButtonElement>("button[data-alert-id]"),
+  ];
+  const index = rows.findIndex((row) => row === document.activeElement);
+  if (index < 0) return;
+  event.preventDefault();
+  const target = rows[move(index, rows.length)]!;
+  target.focus();
+  select(target.dataset.alertId!);
 }
 
 export function AlertInbox() {
@@ -60,7 +85,12 @@ export function AlertInbox() {
         const selected = sorted.find((alert) => alert.id === selectedId) ?? sorted[0]!;
         return (
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-            <ol aria-label="Unresolved alerts, most severe first" className="flex flex-col gap-2">
+            <ol
+              aria-label="Unresolved alerts, most severe first"
+              aria-describedby="inbox-keys"
+              className="flex flex-col gap-2"
+              onKeyDown={(event) => moveThroughList(event, setSelectedId)}
+            >
               {sorted.map((alert) => (
                 <li key={alert.id}>
                   <AlertRow
@@ -72,6 +102,9 @@ export function AlertInbox() {
                 </li>
               ))}
             </ol>
+            <p id="inbox-keys" className="sr-only">
+              Use the up and down arrow keys to move between alerts.
+            </p>
             <AlertExplanation alert={selected} now={now}>
               {/* Keyed by alert so the form starts empty for each alert. */}
               <AlertActions key={selected.id} alert={selected} listKey={INBOX_QUERY_KEY} />
