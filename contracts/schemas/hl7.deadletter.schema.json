@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wardwatch.local/contracts/hl7.deadletter.schema.json",
+  "title": "hl7.deadletter",
+  "description": "A message rejected at some stage of the pipeline.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "received_at",
+    "stage",
+    "error_code",
+    "error_detail",
+    "control_id",
+    "raw_base64",
+    "raw_truncated"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "received_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "stage": {
+      "enum": [
+        "frame",
+        "parse",
+        "validate",
+        "fhir"
+      ]
+    },
+    "error_code": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]*$"
+    },
+    "error_detail": {
+      "type": "string"
+    },
+    "control_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "MSH-10 when it could be read."
+    },
+    "raw_base64": {
+      "type": "string",
+      "contentEncoding": "base64",
+      "description": "The message bytes. For oversized frames only the first bytes are kept."
+    },
+    "raw_truncated": {
+      "type": "boolean"
+    }
+  }
+}

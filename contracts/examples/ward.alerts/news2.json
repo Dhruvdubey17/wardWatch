@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "alert_id": "0e7d1b64-3c2a-4f0b-8a55-7c9e2d4b1f02",
+  "mrn": "MRN0001234",
+  "encounter_id": "ENC000001",
+  "source": "news2",
+  "raised_at": "2024-03-15T13:00:06.210000Z",
+  "icu_hour": 5,
+  "raw_score": 10,
+  "calibrated_probability": null,
+  "news2": {
+    "total": 10,
+    "components": {
+      "respiratory_rate": 2,
+      "spo2": 2,
+      "supplemental_o2": 2,
+      "systolic_bp": 2,
+      "pulse": 1,
+      "consciousness": 0,
+      "temperature": 1
+    },
+    "single_parameter_three": false
+  },
+  "top_factors": [],
+  "model_version": "news2-rcp-2017",
+  "message_time": "2024-03-15T13:00:05+00:00"
+}

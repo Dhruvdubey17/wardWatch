@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "fault catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "description",
+    "faults",
+    "error_codes",
+    "warning_codes"
+  ],
+  "properties": {
+    "description": {
+      "type": "string"
+    },
+    "error_codes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "warning_codes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "faults": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "description",
+          "outcome",
+          "code",
+          "ack_code",
+          "stage"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z_]+$"
+          },
+          "description": {
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "error",
+              "warning"
+            ]
+          },
+          "code": {
+            "type": "string"
+          },
+          "ack_code": {
+            "enum": [
+              "AA",
+              "AE",
+              "AR"
+            ]
+          },
+          "stage": {
+            "enum": [
+              "frame",
+              "parse",
+              "validate"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

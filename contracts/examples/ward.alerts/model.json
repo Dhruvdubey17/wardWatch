@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "alert_id": "5b0c3f0e-8f3a-4a5e-9b1d-2f6f0c9a7e11",
+  "mrn": "MRN0001234",
+  "encounter_id": "ENC000001",
+  "source": "model",
+  "raised_at": "2024-03-15T13:00:06.200000Z",
+  "icu_hour": 5,
+  "raw_score": 1.42,
+  "calibrated_probability": 0.31,
+  "news2": {
+    "total": 10,
+    "components": {
+      "respiratory_rate": 2,
+      "spo2": 2,
+      "supplemental_o2": 2,
+      "systolic_bp": 2,
+      "pulse": 1,
+      "consciousness": 0,
+      "temperature": 1
+    },
+    "single_parameter_three": false
+  },
+  "top_factors": [
+    {
+      "feature": "resp_delta_6h",
+      "label": "Respiratory rate, change over 6 h",
+      "value": 8.0,
+      "contribution": 0.41
+    },
+    {
+      "feature": "lactate_last",
+      "label": "Lactate, latest",
+      "value": 3.1,
+      "contribution": 0.33
+    },
+    {
+      "feature": "hr_last",
+      "label": "Heart rate, latest",
+      "value": 112.0,
+      "contribution": 0.21
+    },
+    {
+      "feature": "temp_max_12h",
+      "label": "Temperature, highest over 12 h",
+      "value": 38.6,
+      "contribution": 0.12
+    },
+    {
+      "feature": "sbp_min_6h",
+      "label": "Systolic blood pressure, lowest over 6 h",
+      "value": 98.0,
+      "contribution": 0.09
+    }
+  ],
+  "model_version": "xgb-20240301-abc1234",
+  "message_time": "2024-03-15T13:00:05+00:00"
+}

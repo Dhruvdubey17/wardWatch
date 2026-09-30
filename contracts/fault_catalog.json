@@ -1,0 +1,106 @@
+{
+  "description": "Defects the simulator can inject and the outcome the ingest engine must produce for each. Errors are rejected with the listed ACK code and dead-lettered. Warnings are accepted with AA and attached to the hl7.validated payload.",
+  "faults": [
+    {
+      "name": "truncated_message",
+      "description": "The message is cut after the MSH segment and half of the next segment, so required segments are missing.",
+      "outcome": "error",
+      "code": "REQUIRED_SEGMENT_MISSING",
+      "ack_code": "AE",
+      "stage": "validate"
+    },
+    {
+      "name": "missing_pid",
+      "description": "The PID segment is removed.",
+      "outcome": "error",
+      "code": "REQUIRED_SEGMENT_MISSING",
+      "ack_code": "AE",
+      "stage": "validate"
+    },
+    {
+      "name": "wrong_encoding_characters",
+      "description": "MSH-2 repeats the component separator, so the encoding characters are not distinct.",
+      "outcome": "error",
+      "code": "ENCODING_CHARACTERS_INVALID",
+      "ack_code": "AR",
+      "stage": "parse"
+    },
+    {
+      "name": "lf_segment_terminators",
+      "description": "Segments end with LF instead of CR.",
+      "outcome": "warning",
+      "code": "SEGMENT_TERMINATOR_NOT_CR",
+      "ack_code": "AA",
+      "stage": "parse"
+    },
+    {
+      "name": "non_numeric_nm",
+      "description": "An OBX with value type NM carries a non-numeric OBX-5.",
+      "outcome": "error",
+      "code": "VALUE_TYPE_MISMATCH",
+      "ack_code": "AE",
+      "stage": "validate"
+    },
+    {
+      "name": "invalid_timestamp",
+      "description": "MSH-7 holds a date that does not exist (month 13).",
+      "outcome": "error",
+      "code": "TIMESTAMP_INVALID",
+      "ack_code": "AE",
+      "stage": "validate"
+    },
+    {
+      "name": "duplicate_control_id",
+      "description": "A message with different content reuses the MSH-10 of the previous message.",
+      "outcome": "error",
+      "code": "CONTROL_ID_DUPLICATE",
+      "ack_code": "AE",
+      "stage": "validate"
+    },
+    {
+      "name": "trailing_separators",
+      "description": "Extra field separators are appended to the end of every segment.",
+      "outcome": "warning",
+      "code": "TRAILING_SEPARATOR",
+      "ack_code": "AA",
+      "stage": "parse"
+    },
+    {
+      "name": "non_ascii_bytes",
+      "description": "The patient family name contains UTF-8 bytes outside ASCII while MSH-18 declares no character set.",
+      "outcome": "warning",
+      "code": "NON_ASCII_BYTES",
+      "ack_code": "AA",
+      "stage": "parse"
+    },
+    {
+      "name": "oversized_frame",
+      "description": "The MLLP frame is padded past the configured maximum frame size with an NTE segment.",
+      "outcome": "error",
+      "code": "FRAME_OVERSIZE",
+      "ack_code": "AR",
+      "stage": "frame"
+    }
+  ],
+  "error_codes": {
+    "MSH_MISSING": "The message does not start with an MSH segment.",
+    "ENCODING_CHARACTERS_INVALID": "MSH-1 or MSH-2 does not define distinct encoding characters.",
+    "SEGMENT_ID_INVALID": "A segment identifier is not three upper-case letters or digits.",
+    "ESCAPE_SEQUENCE_INVALID": "An escape sequence is unterminated or unknown.",
+    "FRAME_OVERSIZE": "The MLLP frame exceeds the configured maximum size.",
+    "MESSAGE_TYPE_UNSUPPORTED": "MSH-9 is not ADT^A01, ADT^A03 or ORU^R01.",
+    "REQUIRED_SEGMENT_MISSING": "A segment required for the message type is absent.",
+    "CONTROL_ID_MISSING": "MSH-10 is empty.",
+    "CONTROL_ID_DUPLICATE": "MSH-10 was already used by a message with different content.",
+    "TIMESTAMP_INVALID": "A DTM field required by the pipeline cannot be parsed.",
+    "VALUE_TYPE_MISMATCH": "OBX-5 does not match the value type in OBX-2.",
+    "RESULT_STATUS_INVALID": "OBX-11 is empty or not a known result status."
+  },
+  "warning_codes": {
+    "SEGMENT_TERMINATOR_NOT_CR": "Segments are terminated with LF or CRLF instead of CR.",
+    "TRAILING_SEPARATOR": "A segment ends with one or more empty trailing fields.",
+    "NON_ASCII_BYTES": "The message contains bytes outside 7-bit ASCII.",
+    "OBSERVATION_CODE_UNKNOWN": "OBX-3 is not in the LOINC table.",
+    "VALUE_IMPLAUSIBLE": "A numeric OBX-5 is outside the plausible physiologic range for its code."
+  }
+}

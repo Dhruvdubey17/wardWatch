@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LOINC table",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "description",
+    "codes"
+  ],
+  "properties": {
+    "description": {
+      "type": "string"
+    },
+    "codes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "display",
+          "physionet_variable",
+          "ucum_unit",
+          "category",
+          "plausible_min",
+          "plausible_max"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^[0-9]+-[0-9]$"
+          },
+          "display": {
+            "type": "string"
+          },
+          "physionet_variable": {
+            "type": "string"
+          },
+          "ucum_unit": {
+            "type": "string"
+          },
+          "category": {
+            "enum": [
+              "vital-signs",
+              "laboratory"
+            ]
+          },
+          "plausible_min": {
+            "type": "number"
+          },
+          "plausible_max": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

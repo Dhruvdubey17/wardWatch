@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "received_at": "2024-03-15T13:00:07.000001Z",
+  "stage": "validate",
+  "error_code": "TIMESTAMP_INVALID",
+  "error_detail": "MSH-7 month 13 is out of range",
+  "control_id": "SIM000008",
+  "raw_base64": "TVNIfF5+XCZ8V1dTSU18V0FSRFdBVENIX0lDVXxXQVJEV0FUQ0h8V0FSRFdBVENIfDIwMjQxMzE1MTMwMDA1KzAwMDB8fE9SVV5SMDFeT1JVX1IwMXxTSU0wMDAwMDh8UHwyLjUuMQ0=",
+  "raw_truncated": false
+}

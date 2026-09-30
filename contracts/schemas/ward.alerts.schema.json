@@ -1,0 +1,174 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wardwatch.local/contracts/ward.alerts.schema.json",
+  "title": "ward.alerts",
+  "description": "An alert raised by the scorer at the close of an ICU hour, keyed by MRN.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "alert_id",
+    "mrn",
+    "encounter_id",
+    "source",
+    "raised_at",
+    "icu_hour",
+    "raw_score",
+    "calibrated_probability",
+    "news2",
+    "top_factors",
+    "model_version",
+    "message_time"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "alert_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "mrn": {
+      "type": "string",
+      "minLength": 1
+    },
+    "encounter_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source": {
+      "enum": [
+        "model",
+        "news2"
+      ]
+    },
+    "raised_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "icu_hour": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "raw_score": {
+      "type": "number",
+      "description": "Model margin output, or the NEWS2 total for news2 alerts."
+    },
+    "calibrated_probability": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Null for news2 alerts."
+    },
+    "news2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "total",
+        "components",
+        "single_parameter_three"
+      ],
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20
+        },
+        "components": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "respiratory_rate",
+            "spo2",
+            "supplemental_o2",
+            "systolic_bp",
+            "pulse",
+            "consciousness",
+            "temperature"
+          ],
+          "properties": {
+            "respiratory_rate": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            },
+            "spo2": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            },
+            "supplemental_o2": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            },
+            "systolic_bp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            },
+            "pulse": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            },
+            "consciousness": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            },
+            "temperature": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            }
+          }
+        },
+        "single_parameter_three": {
+          "type": "boolean"
+        }
+      }
+    },
+    "top_factors": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "feature",
+          "label",
+          "value",
+          "contribution"
+        ],
+        "properties": {
+          "feature": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "value": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "contribution": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "model_version": {
+      "type": "string"
+    },
+    "message_time": {
+      "type": "string",
+      "description": "MSH-7 of the newest observation in the scored hour, for end to end latency."
+    }
+  }
+}

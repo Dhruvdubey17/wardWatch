@@ -1,0 +1,122 @@
+{
+  "description": "LOINC codes carried in OBX-3. Display names are LOINC long common names, checked against the NLM Clinical Tables LOINC service. Plausible ranges drive ingest warnings, not rejections.",
+  "codes": [
+    {
+      "code": "8867-4",
+      "display": "Heart rate",
+      "physionet_variable": "HR",
+      "ucum_unit": "/min",
+      "category": "vital-signs",
+      "plausible_min": 0,
+      "plausible_max": 300
+    },
+    {
+      "code": "59408-5",
+      "display": "Oxygen saturation in Arterial blood by Pulse oximetry",
+      "physionet_variable": "O2Sat",
+      "ucum_unit": "%",
+      "category": "vital-signs",
+      "plausible_min": 0,
+      "plausible_max": 100
+    },
+    {
+      "code": "8310-5",
+      "display": "Body temperature",
+      "physionet_variable": "Temp",
+      "ucum_unit": "Cel",
+      "category": "vital-signs",
+      "plausible_min": 25,
+      "plausible_max": 45
+    },
+    {
+      "code": "8480-6",
+      "display": "Systolic blood pressure",
+      "physionet_variable": "SBP",
+      "ucum_unit": "mm[Hg]",
+      "category": "vital-signs",
+      "plausible_min": 0,
+      "plausible_max": 300
+    },
+    {
+      "code": "8478-0",
+      "display": "Mean blood pressure",
+      "physionet_variable": "MAP",
+      "ucum_unit": "mm[Hg]",
+      "category": "vital-signs",
+      "plausible_min": 0,
+      "plausible_max": 300
+    },
+    {
+      "code": "8462-4",
+      "display": "Diastolic blood pressure",
+      "physionet_variable": "DBP",
+      "ucum_unit": "mm[Hg]",
+      "category": "vital-signs",
+      "plausible_min": 0,
+      "plausible_max": 250
+    },
+    {
+      "code": "9279-1",
+      "display": "Respiratory rate",
+      "physionet_variable": "Resp",
+      "ucum_unit": "/min",
+      "category": "vital-signs",
+      "plausible_min": 0,
+      "plausible_max": 100
+    },
+    {
+      "code": "3150-0",
+      "display": "Inhaled oxygen concentration",
+      "physionet_variable": "FiO2",
+      "ucum_unit": "1",
+      "category": "vital-signs",
+      "plausible_min": 0.15,
+      "plausible_max": 1.0
+    },
+    {
+      "code": "2524-7",
+      "display": "Lactate [Moles/volume] in Serum or Plasma",
+      "physionet_variable": "Lactate",
+      "ucum_unit": "mmol/L",
+      "category": "laboratory",
+      "plausible_min": 0,
+      "plausible_max": 40
+    },
+    {
+      "code": "6690-2",
+      "display": "Leukocytes [#/volume] in Blood by Automated count",
+      "physionet_variable": "WBC",
+      "ucum_unit": "10*3/uL",
+      "category": "laboratory",
+      "plausible_min": 0,
+      "plausible_max": 500
+    },
+    {
+      "code": "2160-0",
+      "display": "Creatinine [Mass/volume] in Serum or Plasma",
+      "physionet_variable": "Creatinine",
+      "ucum_unit": "mg/dL",
+      "category": "laboratory",
+      "plausible_min": 0,
+      "plausible_max": 30
+    },
+    {
+      "code": "777-3",
+      "display": "Platelets [#/volume] in Blood by Automated count",
+      "physionet_variable": "Platelets",
+      "ucum_unit": "10*3/uL",
+      "category": "laboratory",
+      "plausible_min": 0,
+      "plausible_max": 2000
+    },
+    {
+      "code": "1975-2",
+      "display": "Bilirubin.total [Mass/volume] in Serum or Plasma",
+      "physionet_variable": "Bilirubin_total",
+      "ucum_unit": "mg/dL",
+      "category": "laboratory",
+      "plausible_min": 0,
+      "plausible_max": 80
+    }
+  ]
+}

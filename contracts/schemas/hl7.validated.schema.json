@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wardwatch.local/contracts/hl7.validated.schema.json",
+  "title": "hl7.validated",
+  "description": "An HL7 v2 message accepted by the ingest engine, keyed by MRN.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "control_id",
+    "message_type",
+    "trigger_event",
+    "sending_facility",
+    "mrn",
+    "message_time",
+    "received_at",
+    "segments",
+    "warnings",
+    "raw_base64"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "control_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "message_type": {
+      "enum": [
+        "ADT",
+        "ORU"
+      ]
+    },
+    "trigger_event": {
+      "enum": [
+        "A01",
+        "A03",
+        "R01"
+      ]
+    },
+    "sending_facility": {
+      "type": "string"
+    },
+    "mrn": {
+      "type": "string",
+      "minLength": 1,
+      "description": "PID-3 identifier with type code MR, also the Kafka key."
+    },
+    "message_time": {
+      "type": "string",
+      "description": "MSH-7 as ISO 8601. The offset is present only when the sender gave one."
+    },
+    "received_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "segments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "fields"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9]{2}$"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Subcomponents, with escape sequences decoded."
+                },
+                "description": "Components of one repetition."
+              },
+              "description": "Repetitions of one field. An empty field is an empty array."
+            },
+            "description": "fields[0] is field 1. For MSH, field 1 is the field separator and field 2 holds the encoding characters verbatim."
+          }
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "detail"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]*$"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string",
+            "description": "Segment, occurrence and field, for example OBX[3]-5."
+          }
+        }
+      }
+    },
+    "raw_base64": {
+      "type": "string",
+      "contentEncoding": "base64"
+    }
+  }
+}

@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wardwatch.local/contracts/fhir.observations.schema.json",
+  "title": "fhir.observations",
+  "description": "An Observation stored by the FHIR service, keyed by MRN.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "mrn",
+    "encounter_id",
+    "message_time",
+    "observation"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "mrn": {
+      "type": "string",
+      "minLength": 1
+    },
+    "encounter_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "message_time": {
+      "type": "string",
+      "description": "MSH-7 of the source message, carried for end to end latency."
+    },
+    "observation": {
+      "type": "object",
+      "description": "A FHIR R4 Observation. The full resource is validated with fhir.resources in the FHIR service tests; this schema pins the fields consumers rely on.",
+      "required": [
+        "resourceType",
+        "id",
+        "status",
+        "category",
+        "code",
+        "subject",
+        "encounter",
+        "effectiveDateTime",
+        "valueQuantity"
+      ],
+      "properties": {
+        "resourceType": {
+          "const": "Observation"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9\\-.]{1,64}$"
+        },
+        "status": {
+          "enum": [
+            "registered",
+            "preliminary",
+            "final",
+            "amended",
+            "corrected",
+            "cancelled",
+            "entered-in-error",
+            "unknown"
+          ]
+        },
+        "category": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "coding"
+            ],
+            "properties": {
+              "coding": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "system",
+                    "code"
+                  ],
+                  "properties": {
+                    "system": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "display": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "code": {
+          "type": "object",
+          "required": [
+            "coding"
+          ],
+          "properties": {
+            "coding": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "system",
+                  "code"
+                ],
+                "properties": {
+                  "system": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  },
+                  "display": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "subject": {
+          "type": "object",
+          "required": [
+            "reference"
+          ],
+          "properties": {
+            "reference": {
+              "type": "string",
+              "pattern": "^Patient/"
+            }
+          }
+        },
+        "encounter": {
+          "type": "object",
+          "required": [
+            "reference"
+          ],
+          "properties": {
+            "reference": {
+              "type": "string",
+              "pattern": "^Encounter/"
+            }
+          }
+        },
+        "effectiveDateTime": {
+          "type": "string"
+        },
+        "valueQuantity": {
+          "type": "object",
+          "required": [
+            "value",
+            "unit",
+            "system",
+            "code"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "unit": {
+              "type": "string"
+            },
+            "system": {
+              "const": "http://unitsofmeasure.org"
+            },
+            "code": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

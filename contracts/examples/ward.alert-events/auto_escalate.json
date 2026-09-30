@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "alert_id": "0e7d1b64-3c2a-4f0b-8a55-7c9e2d4b1f02",
+  "transition": "escalate",
+  "from_status": "open",
+  "to_status": "escalated",
+  "actor": "system",
+  "reason": "unacknowledged_timeout",
+  "note": null,
+  "occurred_at": "2024-03-15T13:30:06Z"
+}

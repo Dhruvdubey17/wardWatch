@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "alert_id": "5b0c3f0e-8f3a-4a5e-9b1d-2f6f0c9a7e11",
+  "transition": "acknowledge",
+  "from_status": "open",
+  "to_status": "acknowledged",
+  "actor": "Dr. Priya Raman",
+  "reason": null,
+  "note": "Reviewing lactate trend.",
+  "occurred_at": "2024-03-15T13:04:10Z"
+}

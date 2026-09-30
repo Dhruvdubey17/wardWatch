@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wardwatch.local/contracts/ward.alert-events.schema.json",
+  "title": "ward.alert-events",
+  "description": "One transition of an alert through the clinician workflow.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "alert_id",
+    "transition",
+    "from_status",
+    "to_status",
+    "actor",
+    "reason",
+    "note",
+    "occurred_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "alert_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "transition": {
+      "enum": [
+        "acknowledge",
+        "escalate",
+        "resolve"
+      ]
+    },
+    "from_status": {
+      "enum": [
+        "open",
+        "acknowledged",
+        "escalated"
+      ]
+    },
+    "to_status": {
+      "enum": [
+        "acknowledged",
+        "escalated",
+        "resolved"
+      ]
+    },
+    "actor": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Clinician name, or system for automatic escalation."
+    },
+    "reason": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Escalation reason from the fixed list, null otherwise."
+    },
+    "note": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
