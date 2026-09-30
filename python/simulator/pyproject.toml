@@ -3,7 +3,12 @@ name = "wardwatch-sim"
 version = "0.1.0"
 description = "HL7 v2 replay simulator for WardWatch."
 requires-python = ">=3.12,<3.13"
-dependencies = []
+dependencies = [
+    "wardwatch-ml",
+]
+
+[project.scripts]
+wardwatch-sim = "wardwatch_sim.cli:main"
 
 [build-system]
 requires = ["hatchling>=1.25"]
@@ -11,3 +16,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/wardwatch_sim"]
+
+[tool.uv.sources]
+wardwatch-ml = { workspace = true }

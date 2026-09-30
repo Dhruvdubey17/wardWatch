@@ -3,7 +3,10 @@ name = "wardwatch-ml"
 version = "0.1.0"
 description = "Data loading, features, NEWS2, models and evaluation for WardWatch."
 requires-python = ">=3.12,<3.13"
-dependencies = []
+dependencies = [
+    "numpy>=2.0",
+    "pandas>=2.2",
+]
 
 [build-system]
 requires = ["hatchling>=1.25"]
