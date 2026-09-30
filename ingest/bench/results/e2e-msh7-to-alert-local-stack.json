@@ -1,0 +1,29 @@
+{
+  "metric": "wardwatch_msh7_to_alert_publish_seconds",
+  "observations": 231,
+  "quantiles_seconds": {
+    "p50": 1.6111111111111112,
+    "p90": 3.4175000000000004,
+    "p95": 4.2837499999999995,
+    "p99": 4.97675
+  },
+  "bucket_bounds_seconds": [
+    0.05,
+    0.1,
+    0.25,
+    0.5,
+    1.0,
+    2.0,
+    5.0,
+    10.0,
+    30.0,
+    60.0
+  ],
+  "source": "http://127.0.0.1:9465/metrics",
+  "measured_at": "2026-09-30T08:58:36.947660+00:00",
+  "host": {
+    "platform": "macOS-26.1-arm64-arm-64bit",
+    "machine": "arm64"
+  },
+  "note": "scripts/local_stack.sh on one Apple M3 (Release ingest, Kafka sink, local Postgres 15 and Kafka 3.9.1); wardwatch-sim replay --beds 12 --sites A,B at the default 2 s per ICU hour on data/physionet with data/synthea identities; scraped after 240 s"
+}
