@@ -48,3 +48,5 @@ frontend/playwright-report/
 .DS_Store
 .idea/
 .vscode/
+frontend/tsconfig.tsbuildinfo
+frontend/next-env.d.ts

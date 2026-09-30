@@ -23,6 +23,7 @@ py_test_dirs = $(shell cd python && for d in tests/$(1) ../scripts/tests/$(1) $(
 
 .PHONY: ml-smoke openapi python-coverage python-env python-setup python-lint python-test-unit python-test-integration
 .PHONY: ingest-coverage ingest-build ingest-lint ingest-test-unit ingest-test-integration ingest-sanitize ingest-fuzz
+.PHONY: frontend-setup frontend-lint frontend-test-unit frontend-test-e2e frontend-coverage
 .PHONY: format help setup setup-tools data lint lint-prose test-unit test-integration test \
 	sanitize fuzz bench train eval coverage check up demo down autopilot
 
@@ -39,7 +40,32 @@ python-setup:
 	./scripts/macos_openmp_rpath.sh
 	cd python && uv run pre-commit install
 
-setup: setup-tools python-setup
+FRONTEND := frontend
+PNPM := $(or $(wildcard $(TOOLS_DIR)/node/node_modules/.bin/pnpm),pnpm) --dir $(FRONTEND)
+
+frontend-setup:
+	$(PNPM) install --frozen-lockfile
+
+setup: setup-tools python-setup frontend-setup
+
+# lib/api/schema.ts is generated from contracts/openapi.json; the lint fails
+# when the two drift apart, and `pnpm --dir frontend generate:api` fixes it.
+frontend-lint:
+	$(PNPM) lint
+	$(PNPM) typecheck
+	$(PNPM) exec openapi-typescript ../contracts/openapi.json --output ../.tools/openapi-schema.ts >/dev/null
+	$(PNPM) exec prettier --stdin-filepath lib/api/schema.ts < .tools/openapi-schema.ts | diff -q - $(FRONTEND)/lib/api/schema.ts >/dev/null \
+		|| { echo "frontend-lint: lib/api/schema.ts is stale; run pnpm --dir frontend generate:api" >&2; exit 1; }
+
+frontend-test-unit:
+	$(PNPM) test
+
+frontend-coverage:
+	$(PNPM) test:coverage
+
+# Needs the compose stack from `make up`.
+frontend-test-e2e:
+	$(PNPM) test:e2e
 
 python-lint:
 	cd python && uv run ruff check --config pyproject.toml . ../scripts && uv run ruff format --config pyproject.toml --check . ../scripts
@@ -103,15 +129,16 @@ ingest-fuzz:
 		$$target -max_total_time=$(FUZZ_SECONDS) -print_final_stats=1 $$corpus $$seeds || exit 1; done
 
 format:
+	$(PNPM) format
 	cd $(INGEST) && clang-format -i $(CPP_SOURCES)
 	cd python && uv run ruff format -q --config pyproject.toml . ../scripts && uv run ruff check -q --fix --config pyproject.toml . ../scripts
 
-lint: python-lint ingest-lint
+lint: python-lint ingest-lint frontend-lint
 
 lint-prose:
 	cd python && uv run python ../scripts/lint_prose.py
 
-test-unit: python-test-unit ingest-test-unit
+test-unit: python-test-unit ingest-test-unit frontend-test-unit
 
 test-integration: python-test-integration ingest-test-integration
 
@@ -160,7 +187,7 @@ python-coverage: ingest-build python-env
 openapi:
 	cd python && uv run wardwatch-fhir openapi --output ../contracts/openapi.json
 
-coverage: ingest-coverage python-coverage
+coverage: ingest-coverage python-coverage frontend-coverage
 
 check: lint lint-prose test sanitize coverage
 

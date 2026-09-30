@@ -18,6 +18,10 @@ RUN uv sync --frozen --no-dev --no-editable --package "$SERVICE"
 
 FROM python:3.12-slim
 ARG SERVICE
+# xgboost links against the GNU OpenMP runtime, which the slim image leaves out.
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
 RUN useradd --system --uid 10001 wardwatch
 COPY --from=build /build/python/.venv /opt/wardwatch/.venv
 COPY contracts /opt/wardwatch/contracts
