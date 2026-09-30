@@ -34,3 +34,15 @@ jobs:
           cache-dependency-glob: python/uv.lock
       - run: cd python && uv sync --frozen
       - run: cd python && uv run pytest -c pyproject.toml -q -m unit tests/unit
+
+  fuzz:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install clang with the libFuzzer runtime
+        run: sudo apt-get update && sudo apt-get install -y clang libclang-rt-18-dev ninja-build
+      - uses: actions/cache@v4
+        with:
+          path: ingest/build/fuzz/_deps
+          key: fuzz-deps-${{ hashFiles('ingest/cmake/Dependencies.cmake', 'ingest/fuzz/CMakeLists.txt') }}
+      - run: make fuzz FUZZ_SECONDS=60

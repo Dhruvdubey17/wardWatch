@@ -13,7 +13,8 @@ PY_PACKAGES := simulator ml fhir_service scorer
 INGEST := ingest
 # clang-tidy from PyPI does not know where the macOS SDK keeps libc++.
 TIDY_EXTRA := $(if $(filter Darwin,$(shell uname -s)),--extra-arg=-isysroot$(shell xcrun --show-sdk-path 2>/dev/null),)
-CPP_SOURCES = $(shell cd $(INGEST) && git ls-files -co --exclude-standard '*.cpp' '*.hpp' | grep -v '^build/')
+CPP_SOURCES = $(shell cd $(INGEST) && for f in $$(git ls-files -co --exclude-standard '*.cpp' '*.hpp' | grep -v '^build/'); do \
+	[ -f $$f ] && echo $$f; done)
 
 # Lists the test directories of one layer that contain at least one test file,
 # so pytest never runs on an empty directory and exits with code 5.
@@ -75,9 +76,10 @@ ingest-sanitize:
 
 ingest-fuzz:
 	cd $(INGEST) && cmake --preset fuzz >/dev/null && cmake --build --preset fuzz
-	cd $(INGEST) && for target in build/fuzz/fuzz/*_fuzz; do \
-		name=$$(basename $$target); corpus=build/fuzz/corpus/$$name; mkdir -p $$corpus; \
-		seeds=fuzz/corpus/$$name; [ -d $$seeds ] || seeds=""; \
+	cd $(INGEST) && for source in fuzz/*_fuzz.cpp; do \
+		name=$$(basename $$source .cpp); target=build/fuzz/fuzz/$$name; seed_name=$${name%_fuzz}; \
+		corpus=build/fuzz/corpus/$$seed_name; mkdir -p $$corpus; \
+		seeds=fuzz/corpus/$$seed_name; [ -d $$seeds ] || seeds=""; \
 		$$target -max_total_time=$(FUZZ_SECONDS) -print_final_stats=1 $$corpus $$seeds || exit 1; done
 
 format:

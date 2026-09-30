@@ -38,6 +38,7 @@ function(wardwatch_add_fuzzer name source)
   add_executable(${name} ${source})
   target_compile_options(${name} PRIVATE ${fuzz_compile_flag})
   target_link_libraries(${name} PRIVATE wardwatch_core wardwatch_warnings ${fuzz_link_libraries})
+  target_include_directories(${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 endfunction()
 
 file(GLOB fuzz_sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*_fuzz.cpp)
