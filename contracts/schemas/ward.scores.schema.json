@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wardwatch.local/contracts/ward.scores.schema.json",
+  "title": "ward.scores",
+  "description": "The scorer's result for one ICU hour of one encounter, published every hour whether or not it alerts. Keyed by MRN.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "mrn",
+    "encounter_id",
+    "icu_hour",
+    "hour_ending",
+    "scored_at",
+    "news2",
+    "raw_score",
+    "calibrated_probability",
+    "model_version",
+    "alerted"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "mrn": {
+      "type": "string",
+      "minLength": 1
+    },
+    "encounter_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "icu_hour": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "hour_ending": {
+      "type": "string",
+      "description": "Simulated clinical time at the end of the scored hour: admission plus icu_hour hours."
+    },
+    "scored_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "news2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "total",
+        "components",
+        "single_parameter_three"
+      ],
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20
+        },
+        "components": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "respiratory_rate",
+            "spo2",
+            "supplemental_o2",
+            "systolic_bp",
+            "pulse",
+            "consciousness",
+            "temperature"
+          ],
+          "properties": {
+            "respiratory_rate": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            },
+            "spo2": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            },
+            "supplemental_o2": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            },
+            "systolic_bp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            },
+            "pulse": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            },
+            "consciousness": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            },
+            "temperature": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            }
+          }
+        },
+        "single_parameter_three": {
+          "type": "boolean"
+        }
+      }
+    },
+    "raw_score": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Model margin; null when no serving bundle is loaded."
+    },
+    "calibrated_probability": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 1
+    },
+    "model_version": {
+      "type": "string"
+    },
+    "alerted": {
+      "type": "boolean",
+      "description": "Whether this hour raised a ward.alerts record."
+    }
+  }
+}

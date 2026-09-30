@@ -7,6 +7,7 @@ from typing import Any
 from sqlalchemy import (
     JSON,
     BigInteger,
+    Boolean,
     Date,
     DateTime,
     Float,
@@ -109,3 +110,19 @@ class AlertEvent(Base):
     reason: Mapped[str | None] = mapped_column(String(64))
     note: Mapped[str | None] = mapped_column(Text)
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class Score(Base):
+    __tablename__ = "scores"
+
+    encounter_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    icu_hour: Mapped[int] = mapped_column(Integer, primary_key=True)
+    mrn: Mapped[str] = mapped_column(String(64), index=True)
+    hour_ending: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    scored_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    news2_total: Mapped[int] = mapped_column(Integer)
+    news2: Mapped[dict[str, Any]] = mapped_column(JsonColumn)
+    raw_score: Mapped[float | None] = mapped_column(Float)
+    calibrated_probability: Mapped[float | None] = mapped_column(Float)
+    model_version: Mapped[str] = mapped_column(String(64))
+    alerted: Mapped[bool] = mapped_column(Boolean)

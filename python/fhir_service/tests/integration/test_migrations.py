@@ -12,7 +12,7 @@ from wardwatch_fhir.models import Alert, AlertEvent, Base
 
 pytestmark = pytest.mark.integration
 
-TABLES = {"patients", "encounters", "observations", "alerts", "alert_events"}
+TABLES = {"patients", "encounters", "observations", "alerts", "alert_events", "scores"}
 
 
 async def table_names(database_url: str) -> set[str]:

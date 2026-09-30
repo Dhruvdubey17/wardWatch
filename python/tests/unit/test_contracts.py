@@ -16,6 +16,7 @@ TOPICS = [
     "fhir.observations",
     "ward.alerts",
     "ward.alert-events",
+    "ward.scores",
 ]
 
 

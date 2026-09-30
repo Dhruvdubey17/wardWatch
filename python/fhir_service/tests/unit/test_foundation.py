@@ -55,6 +55,7 @@ def test_tables_in_metadata() -> None:
         "observations",
         "alerts",
         "alert_events",
+        "scores",
     }
     observation = Base.metadata.tables["observations"]
     assert {"patient_id", "encounter_id", "code", "effective", "value", "resource"} <= set(

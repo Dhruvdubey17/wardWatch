@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     observations_topic: str = "fhir.observations"
     alerts_topic: str = "ward.alerts"
     alert_events_topic: str = "ward.alert-events"
+    scores_topic: str = "ward.scores"
     # The base of absolute URLs in FHIR Bundles (Bundle.link, fullUrl).
     public_base_url: str = "http://127.0.0.1:8000"
     # Alerts left open this long are escalated by the service itself.

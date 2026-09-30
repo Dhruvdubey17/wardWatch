@@ -23,6 +23,7 @@ from wardwatch_fhir.alert_states import (
     Transition,
     parse_etag,
 )
+from wardwatch_fhir.ward_views import census, patient_vitals
 
 router = APIRouter(prefix="/api")
 
@@ -147,3 +148,20 @@ async def resolve(
     if_match: Annotated[str | None, Header()] = None,
 ) -> Any:
     return await _act(request, alert_id, "resolve", body, if_match=if_match)
+
+
+@router.get("/ward/census")
+async def ward_census(request: Request) -> Any:
+    async with request.app.state.sessions() as session:
+        return await census(session)
+
+
+@router.get("/patients/{mrn}/vitals")
+async def vitals(
+    mrn: str, request: Request, hours: Annotated[int, Query(ge=1, le=168)] = 12
+) -> Any:
+    async with request.app.state.sessions() as session:
+        result = await patient_vitals(session, mrn, hours)
+    if result is None:
+        return _error(404, f"patient {mrn} is not known")
+    return result
