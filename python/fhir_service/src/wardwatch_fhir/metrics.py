@@ -32,3 +32,7 @@ END_TO_END_LATENCY = Histogram(
     "From the MSH-7 of the scored hour's message to the alert being stored",
     buckets=(0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 30, 60),
 )
+ALERT_EVENT_PUBLISH_FAILURES = Counter(
+    "wardwatch_fhir_alert_event_publish_failures_total",
+    "Committed transitions whose ward.alert-events record could not be published",
+)
