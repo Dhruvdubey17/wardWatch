@@ -9,7 +9,14 @@ TOOLS_DIR := $(CURDIR)/.tools
 export PATH := $(TOOLS_DIR)/venv/bin:$(TOOLS_DIR)/node/node_modules/.bin:$(PATH)
 
 FUZZ_SECONDS ?= 60
+PY_PACKAGES := simulator ml fhir_service scorer
 
+# Lists the test directories of one layer that contain at least one test file,
+# so pytest never runs on an empty directory and exits with code 5.
+py_test_dirs = $(shell cd python && for d in tests/$(1) $(addsuffix /tests/$(1),$(PY_PACKAGES)); do \
+	ls $$d/test_*.py >/dev/null 2>&1 && echo $$d; done)
+
+.PHONY: python-setup python-lint python-test-unit python-test-integration
 .PHONY: help setup setup-tools data lint lint-prose test-unit test-integration test \
 	sanitize fuzz bench train eval coverage check up demo down autopilot
 
@@ -21,22 +28,34 @@ setup-tools:
 	uv pip install -q -p $(TOOLS_DIR)/venv/bin/python cmake ninja clang-format clang-tidy
 	npm install --silent --prefix $(TOOLS_DIR)/node pnpm@9
 
-setup: setup-tools
+python-setup:
+	cd python && uv sync -q
+
+setup: setup-tools python-setup
+
+python-lint:
+	cd python && uv run ruff check . && uv run ruff format --check .
+	cd python && uv run mypy layer_markers.py conftest.py tests
+	cd python && for pkg in $(PY_PACKAGES); do uv run mypy $$pkg/src $$( [ -n "$$(ls $$pkg/tests/*/*.py 2>/dev/null)" ] && echo $$pkg/tests ) || exit 1; done
+
+python-test-unit:
+	cd python && uv run pytest -q -m unit $(call py_test_dirs,unit)
+
+python-test-integration:
+	@dirs="$(call py_test_dirs,integration)"; if [ -z "$$dirs" ]; then echo "python-test-integration: no integration suites yet"; \
+	else cd python && uv run pytest -q -m integration $$dirs; fi
 
 data:
 	@echo "data: added in Phase 0 task P0.6"
 
-lint:
-	@echo "lint: component linters are added with each component (Phases 1 to 6)"
+lint: python-lint
 
 lint-prose:
 	@echo "lint-prose: added in Phase 0 task P0.4"
 
-test-unit:
-	@echo "test-unit: component suites are added with each component (Phases 0 to 6)"
+test-unit: python-test-unit
 
-test-integration:
-	@echo "test-integration: component suites are added with each component (Phases 1 to 6)"
+test-integration: python-test-integration
 
 test: test-unit test-integration
 
