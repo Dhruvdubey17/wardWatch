@@ -7,6 +7,7 @@ import { alertSeverity, sortAlerts, sourceLabel, STATUS_LABEL, UNRESOLVED } from
 import { formatDuration, formatProbability } from "@/lib/format";
 import { SEVERITY_STYLE } from "@/lib/severity";
 import { useNow } from "@/hooks/useNow";
+import { AlertActions } from "./AlertActions";
 import { AlertExplanation } from "./AlertExplanation";
 import { QueryState } from "./QueryState";
 
@@ -71,7 +72,10 @@ export function AlertInbox() {
                 </li>
               ))}
             </ol>
-            <AlertExplanation alert={selected} now={now} />
+            <AlertExplanation alert={selected} now={now}>
+              {/* Keyed by alert so the form starts empty for each alert. */}
+              <AlertActions key={selected.id} alert={selected} listKey={INBOX_QUERY_KEY} />
+            </AlertExplanation>
           </div>
         );
       }}
