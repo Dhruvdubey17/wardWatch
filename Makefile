@@ -25,7 +25,7 @@ py_test_dirs = $(shell cd python && for d in tests/$(1) ../scripts/tests/$(1) $(
 .PHONY: ingest-coverage ingest-build ingest-lint ingest-test-unit ingest-test-integration ingest-sanitize ingest-fuzz
 .PHONY: frontend-setup frontend-lint frontend-test-unit frontend-test-e2e frontend-test-e2e-local frontend-coverage
 .PHONY: format help setup setup-tools data lint lint-prose test-unit test-integration test \
-	sanitize fuzz bench train eval coverage check up demo down autopilot
+	sanitize fuzz bench train eval coverage check up demo down smoke autopilot
 
 help:
 	@grep -E '^[a-z-]+:' $(MAKEFILE_LIST) | cut -d: -f1 | sort | tr '\n' ' '; echo
@@ -200,14 +200,24 @@ coverage: ingest-coverage python-coverage frontend-coverage
 
 check: lint lint-prose test sanitize coverage
 
-up:
-	@echo "up: added in Phase 7"
+COMPOSE := docker compose -f infra/docker-compose.yml
 
-demo:
-	@echo "demo: added in Phase 7 task P7.4"
+# The scorer mounts ml/artifacts read-only; it runs NEWS2 only until `make train`.
+up:
+	mkdir -p ml/artifacts
+	$(COMPOSE) up --build --detach --wait ingest fhir-service scorer frontend prometheus grafana
+
+demo: up
+	$(COMPOSE) --profile demo up --detach simulator
+	@echo "demo: dashboard http://127.0.0.1:3000"
+	@echo "demo: Grafana   http://127.0.0.1:3001 (dashboards in the WardWatch folder)"
+	@echo "demo: FHIR API  http://127.0.0.1:8000/fhir/metadata"
 
 down:
-	@echo "down: added in Phase 7"
+	$(COMPOSE) --profile demo down --volumes --remove-orphans
+
+smoke:
+	./scripts/smoke_stack.sh
 
 autopilot:
 	./scripts/autopilot.sh

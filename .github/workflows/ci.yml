@@ -211,3 +211,43 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker build -t wardwatch-frontend:ci frontend
+
+  stack-smoke:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: make smoke
+
+  frontend-e2e:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: python/uv.lock
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      # The suite replays the simulator fixtures with `uv run`, which needs the workspace.
+      - run: cd python && uv sync --frozen
+      - run: pnpm --dir frontend install --frozen-lockfile
+      - run: pnpm --dir frontend exec playwright install --with-deps chromium
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.tools/playwright
+      - run: make up
+      - run: make frontend-test-e2e PNPM="pnpm --dir frontend"
+      - if: failure()
+        run: docker compose -f infra/docker-compose.yml logs --tail 200
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
+      - if: always()
+        run: make down

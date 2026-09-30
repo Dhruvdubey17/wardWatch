@@ -1,0 +1,159 @@
+{
+  "uid": "wardwatch-latency",
+  "title": "WardWatch latency",
+  "description": "End to end latency from the HL7 message's MSH-7 time to the alert, and per-stage timings.",
+  "tags": [
+    "wardwatch"
+  ],
+  "timezone": "utc",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "refresh": "10s",
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "heatmap",
+      "title": "MSH-7 to alert publish, histogram",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "wardwatch-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "sum by (le) (increase(wardwatch_msh7_to_alert_publish_seconds_bucket[$__rate_interval]))",
+          "legendFormat": "{{le}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "calculate": false,
+        "yAxis": {
+          "unit": "s"
+        },
+        "cellGap": 1
+      },
+      "description": "Distribution of the time from MSH-7 of the newest message in a scored hour to the scorer publishing its alert."
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "MSH-7 to alert, quantiles",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "wardwatch-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "histogram_quantile(0.5, sum by (le) (rate(wardwatch_msh7_to_alert_publish_seconds_bucket[5m])))",
+          "legendFormat": "p50 published"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(wardwatch_msh7_to_alert_publish_seconds_bucket[5m])))",
+          "legendFormat": "p95 published"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(wardwatch_msh7_to_alert_publish_seconds_bucket[5m])))",
+          "legendFormat": "p99 published"
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(wardwatch_fhir_msh7_to_alert_stored_seconds_bucket[5m])))",
+          "legendFormat": "p95 stored in FHIR"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Per-stage timings",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "wardwatch-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 9,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(wardwatch_ingest_parse_latency_seconds_bucket[5m])))",
+          "legendFormat": "p99 ingest parse and validate"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(wardwatch_scorer_hour_seconds_bucket[5m])))",
+          "legendFormat": "p99 features and scoring per hour"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {}
+    }
+  ]
+}

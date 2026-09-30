@@ -1,0 +1,283 @@
+{
+  "uid": "wardwatch-pipeline",
+  "title": "WardWatch pipeline",
+  "description": "Message flow from MLLP through Kafka to FHIR storage and scoring.",
+  "tags": [
+    "wardwatch"
+  ],
+  "timezone": "utc",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "refresh": "10s",
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Throughput",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "wardwatch-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "sum(rate(wardwatch_ingest_messages_received_total[1m]))",
+          "legendFormat": "ingest received"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "sum(rate(wardwatch_ingest_messages_accepted_total[1m]))",
+          "legendFormat": "ingest accepted"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "sum(rate(wardwatch_fhir_messages_converted_total[1m]))",
+          "legendFormat": "stored as FHIR"
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "sum(rate(wardwatch_scorer_hours_scored_total[1m]))",
+          "legendFormat": "ICU hours scored"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Rejects by code",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "wardwatch-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "sum by (code) (rate(wardwatch_ingest_messages_rejected_total[5m])) > 0",
+          "legendFormat": "{{code}}"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "sum by (error_code) (rate(wardwatch_fhir_deadlettered_total[5m])) > 0",
+          "legendFormat": "FHIR {{error_code}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {},
+      "description": "Ingest rejections (NAK) by error code, and messages the FHIR service dead-lettered."
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Ring buffer occupancy",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "wardwatch-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "max(wardwatch_ingest_ring_occupancy) / max(wardwatch_ingest_ring_capacity)",
+          "legendFormat": "occupancy"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "options": {},
+      "description": "Share of the ingest SPSC ring in use. Near 1 means the sink is the bottleneck and backpressure is on."
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Consumer lag",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "wardwatch-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "sum by (topic) (wardwatch_fhir_consumer_lag)",
+          "legendFormat": "fhir-service {{topic}}"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "sum by (topic) (wardwatch_scorer_consumer_lag)",
+          "legendFormat": "scorer {{topic}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {},
+      "description": "Records behind the end of each topic, summed over partitions."
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Backpressure and sink failures",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "wardwatch-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "sum(rate(wardwatch_ingest_backpressure_events_total[5m]))",
+          "legendFormat": "backpressure events"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "sum(rate(wardwatch_ingest_sink_failed_total[5m]))",
+          "legendFormat": "sink failures"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "sum(rate(wardwatch_ingest_sink_refused_total[5m]))",
+          "legendFormat": "sink refusals"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Open MLLP connections",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "wardwatch-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "sum(wardwatch_ingest_connections_open)",
+          "legendFormat": "connections"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {}
+    }
+  ]
+}

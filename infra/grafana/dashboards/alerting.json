@@ -1,0 +1,203 @@
+{
+  "uid": "wardwatch-alerting",
+  "title": "WardWatch alerting",
+  "description": "Alert burden and the clinical workflow.",
+  "tags": [
+    "wardwatch"
+  ],
+  "timezone": "utc",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "refresh": "10s",
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Alerts per patient-day",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "wardwatch-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "24 * sum(increase(wardwatch_scorer_alerts_total[1h])) / sum(increase(wardwatch_scorer_hours_scored_total[1h]))",
+          "legendFormat": "all sources"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "24 * sum by (source) (increase(wardwatch_scorer_alerts_total[1h])) / scalar(sum(increase(wardwatch_scorer_hours_scored_total[1h])))",
+          "legendFormat": "{{source}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {},
+      "description": "Alerts per 24 scored ICU hours, over the last hour of wall time. Counted in clinical hours because the simulator runs faster than real time."
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Open alerts",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "wardwatch-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "sum(wardwatch_fhir_open_alerts)",
+          "legendFormat": "open"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Active encounters",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "wardwatch-prometheus"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "sum(wardwatch_scorer_active_encounters)",
+          "legendFormat": "encounters"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Time to acknowledge",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "wardwatch-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "histogram_quantile(0.5, sum by (le) (rate(wardwatch_fhir_time_to_acknowledge_seconds_bucket[15m])))",
+          "legendFormat": "median"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "histogram_quantile(0.9, sum by (le) (rate(wardwatch_fhir_time_to_acknowledge_seconds_bucket[15m])))",
+          "legendFormat": "p90"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Workflow transitions",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "wardwatch-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "wardwatch-prometheus"
+          },
+          "expr": "sum by (transition, actor_kind) (rate(wardwatch_fhir_alert_transitions_total[5m])) > 0",
+          "legendFormat": "{{transition}} by {{actor_kind}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {}
+    }
+  ]
+}
