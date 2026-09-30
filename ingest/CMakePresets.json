@@ -84,6 +84,11 @@
       "environment": { "LLVM_PROFILE_FILE": "${sourceDir}/build/coverage/profiles/%p-%m.profraw" }
     },
     { "name": "unit", "inherits": "debug", "filter": { "include": { "label": "unit" } } },
-    { "name": "integration", "inherits": "debug", "filter": { "include": { "label": "integration" } } }
+    {
+      "name": "integration",
+      "inherits": "debug",
+      "filter": { "include": { "label": "integration" }, "exclude": { "label": "kafka" } }
+    },
+    { "name": "kafka", "inherits": "debug", "filter": { "include": { "label": "kafka" } } }
   ]
 }

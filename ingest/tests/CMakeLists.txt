@@ -13,5 +13,19 @@ add_executable(wardwatch_integration_tests ${integration_test_sources})
 target_link_libraries(wardwatch_integration_tests PRIVATE wardwatch_core wardwatch_warnings GTest::gtest_main)
 target_include_directories(wardwatch_integration_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/support)
 target_compile_definitions(wardwatch_integration_tests PRIVATE
-  WARDWATCH_CONTRACTS_DIR="${WARDWATCH_CONTRACTS_DIR}")
+  WARDWATCH_CONTRACTS_DIR="${WARDWATCH_CONTRACTS_DIR}"
+  WARDWATCH_INGEST_BINARY="$<TARGET_FILE:wardwatch-ingest>")
+add_dependencies(wardwatch_integration_tests wardwatch-ingest)
 gtest_discover_tests(wardwatch_integration_tests PROPERTIES LABELS integration DISCOVERY_TIMEOUT 60)
+
+if(WARDWATCH_HAVE_KAFKA)
+  add_executable(wardwatch_kafka_tests kafka/kafka_round_trip_test.cpp)
+  target_link_libraries(wardwatch_kafka_tests PRIVATE
+    wardwatch_core wardwatch_warnings wardwatch_rdkafka GTest::gtest_main)
+  target_include_directories(wardwatch_kafka_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/support)
+  target_compile_definitions(wardwatch_kafka_tests PRIVATE
+    WARDWATCH_CONTRACTS_DIR="${WARDWATCH_CONTRACTS_DIR}"
+    WARDWATCH_INGEST_BINARY="$<TARGET_FILE:wardwatch-ingest>")
+  add_dependencies(wardwatch_kafka_tests wardwatch-ingest)
+  gtest_discover_tests(wardwatch_kafka_tests PROPERTIES LABELS "integration;kafka" DISCOVERY_TIMEOUT 60)
+endif()
