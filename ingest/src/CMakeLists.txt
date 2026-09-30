@@ -4,7 +4,8 @@ add_library(wardwatch_core
   loinc.cpp
   message.cpp
   mllp.cpp
-  types.cpp)
+  types.cpp
+  validator.cpp)
 target_include_directories(wardwatch_core
   PUBLIC ${PROJECT_SOURCE_DIR}/include ${WARDWATCH_GENERATED_DIR})
 target_link_libraries(wardwatch_core

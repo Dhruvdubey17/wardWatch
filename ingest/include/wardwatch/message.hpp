@@ -33,8 +33,10 @@ struct SegmentView {
 class Message {
   public:
     // Accepts CR, LF or CRLF segment terminators; anything other than CR adds
-    // a SEGMENT_TERMINATOR_NOT_CR warning.
-    [[nodiscard]] static std::expected<Message, ParseError> parse(std::vector<char> bytes);
+    // a SEGMENT_TERMINATOR_NOT_CR warning. Takes ownership of `bytes` only on
+    // success, so a caller can still dead-letter the original bytes.
+    [[nodiscard]] static std::expected<Message, ParseError> parse(std::vector<char>& bytes);
+    // Copies the bytes first; for tests and tools.
     [[nodiscard]] static std::expected<Message, ParseError> parse(std::string_view bytes);
 
     Message(Message&&) noexcept = default;

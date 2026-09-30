@@ -44,17 +44,19 @@ std::string_view SegmentView::field(std::size_t number) const noexcept {
     return fields[number - 1];
 }
 
-std::expected<Message, ParseError> Message::parse(std::vector<char> bytes) {
+std::expected<Message, ParseError> Message::parse(std::vector<char>& bytes) {
     Message message;
     message.buffer_ = std::move(bytes);
     if (auto tokenized = message.tokenize(); !tokenized) {
+        bytes = std::move(message.buffer_);
         return std::unexpected(std::move(tokenized.error()));
     }
     return message;
 }
 
 std::expected<Message, ParseError> Message::parse(std::string_view bytes) {
-    return parse(std::vector<char>(bytes.begin(), bytes.end()));
+    std::vector<char> copy(bytes.begin(), bytes.end());
+    return parse(copy);
 }
 
 std::expected<void, ParseError> Message::tokenize() {
