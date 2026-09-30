@@ -1,6 +1,6 @@
 # Evaluation
 
-This is how WardWatch's sepsis models are evaluated, what the evaluation found, and what it cannot tell you. Every number here comes from `ml/reports/20260930T064627Z-7e389a1/summary.md`, written by `make eval` (`wardwatch-ml eval`) at git commit `7e389a1`. The run took 857 s on an Apple M3 (`logs/eval-full.log` on the machine that ran it; logs are not committed).
+This is how WardWatch's sepsis models are evaluated, what the evaluation found, and what it cannot tell you. Every number here comes from `ml/reports/20260930T064627Z-7e389a1/summary.md`, written by `make eval` (`wardwatch-ml eval`) at git commit `7e389a1`. The run took 857 s on an Apple M3 (`elapsed_seconds` in the run's `metrics.json`).
 
 ## Data
 
@@ -25,7 +25,7 @@ Features are causal: the row for hour t uses only hours up to and including t. E
 
 ### Models
 
-- XGBoost on the tabular features, with patient-level cross-validation on the training site, early stopping (81 rounds on site A, 98 on site B) and class weighting.
+- XGBoost on the tabular features, with patient-level cross-validation on the training site, early stopping (the final models use 81 rounds on site A and 98 on site B, `final_rounds` in `metrics.json`) and class weighting.
 - A small GRU in PyTorch over the hourly sequences, taking values, measurement masks and time since last measurement, trained on CPU.
 - NEWS2 (Royal College of Physicians, 2017) as the baseline, computed from the same rows.
 

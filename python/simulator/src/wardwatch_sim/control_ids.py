@@ -13,7 +13,7 @@ _BASE36 = string.digits + string.ascii_uppercase
 
 
 def run_tag(started: datetime) -> str:
-    """Base-36 seconds since the epoch: six characters until the year 2038 and beyond."""
+    """Base-36 seconds since the epoch: six characters until December 2038, then seven."""
     # ponytail: two runs started in the same second share a tag.
     value = int(started.timestamp())
     digits = ""

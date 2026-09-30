@@ -99,7 +99,7 @@ class MllpClient {
     std::vector<std::string> acks_;
 };
 
-// "MSA|AA|..." field 1 of the MSA segment.
+// MSA-1 of an ACK (AA, AE or AR), or empty when it has no MSA segment.
 inline std::string ack_code(std::string_view ack) {
     const std::size_t msa = ack.find("MSA|");
     return msa == std::string_view::npos ? std::string() : std::string(ack.substr(msa + 4, 2));

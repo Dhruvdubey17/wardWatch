@@ -38,7 +38,7 @@ def test_feature_names_are_unique_and_complete() -> None:
 def test_last_value_respects_staleness() -> None:
     hr = [80, NAN, NAN, NAN, NAN, NAN, NAN, NAN, 90]
     features = build_features(stay("p1", {"HR": hr}))
-    # Heart rate goes stale after 6 hours: hours 1-7 carry 80, hours 8 is blank.
+    # Heart rate goes stale after 6 hours: hours 1-7 carry 80, hour 8 is blank.
     assert column(features, "HR_last") == [80, 80, 80, 80, 80, 80, 80, None, 90]
 
 
