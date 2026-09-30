@@ -174,3 +174,40 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker build -f python/Dockerfile --build-arg SERVICE=${{ matrix.service }} -t ${{ matrix.service }}:ci .
+
+  frontend-lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm --dir frontend install --frozen-lockfile
+      - run: make frontend-lint PNPM="pnpm --dir frontend"
+
+  frontend-unit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm --dir frontend install --frozen-lockfile
+      # The coverage run is the unit suite with the 80% line gate on top.
+      - run: make frontend-coverage PNPM="pnpm --dir frontend"
+
+  frontend-image:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t wardwatch-frontend:ci frontend
