@@ -5,8 +5,10 @@
 # GitHub publishes for the asset. The seed, clinician seed and reference date
 # are fixed, so the same population comes out on every run. When the output
 # directory already holds bundles for this configuration the script exits.
-# Synthea needs Java 17; if the host java is older, the jar runs in an
-# eclipse-temurin:17-jre container.
+# Synthea needs Java 17. The host java is used when it is new enough;
+# otherwise scripts/fetch_jre.sh supplies a pinned JRE 17 under .tools, and
+# WARDWATCH_SYNTHEA_DOCKER=1 runs the jar in an eclipse-temurin:17-jre
+# container instead.
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -54,14 +56,18 @@ java_major() {
   java -version 2>&1 | sed -nE 's/.*version "([0-9]+).*/\1/p' | head -n 1
 }
 
-if command -v java >/dev/null 2>&1 && (( "$(java_major)" >= 17 )); then
-  args=("${synthea_args[@]/\/synthea-output/$output_dir}")
-  (cd "$cache_dir" && java -jar "$jar_path" "${args[@]}")
-else
+if [[ "${WARDWATCH_SYNTHEA_DOCKER:-0}" == 1 ]]; then
   docker run --rm --name wardwatch-synthea \
     -v "$cache_dir:/synthea-cache:ro" -v "$output_dir:/synthea-output" \
     -w /tmp eclipse-temurin:17-jre \
     java -jar "/synthea-cache/$(basename "$jar_path")" "${synthea_args[@]}"
+else
+  java=java
+  if ! command -v java >/dev/null 2>&1 || (( "$(java_major)" < 17 )); then
+    java="$("$repo_root/scripts/fetch_jre.sh")"
+  fi
+  args=("${synthea_args[@]/\/synthea-output/$output_dir}")
+  (cd "$cache_dir" && "$java" -jar "$jar_path" "${args[@]}")
 fi
 
 touch "$stamp"
