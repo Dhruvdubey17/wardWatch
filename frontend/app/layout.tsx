@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { ConnectionIndicator } from "@/components/ConnectionIndicator";
 import { Providers } from "@/components/Providers";
 import "./globals.css";
 
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <Link href="/alerts" className="hover:underline">
                 Alerts
               </Link>
+              <ConnectionIndicator />
             </nav>
           </header>
           <main className="mx-auto max-w-7xl px-6 py-6">{children}</main>
