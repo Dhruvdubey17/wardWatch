@@ -93,7 +93,7 @@ Intervals are 95% patient-level bootstrap intervals over 1000 resamples with see
 
 XGBoost ranks patient-hours better than NEWS2 in both directions (AUROC 0.801 against 0.679 from A to B, 0.785 against 0.653 from B to A), and the intervals do not overlap. At a similar alert burden it finds more septic stays: from A to B, 0.939 of them at 1.32 alerts per patient-day against NEWS2's 0.828 at 1.28, with a longer median lead time (35 against 30 hours). Its PPV per alert is still about one in ten at that operating point, so most alerts go to patients who do not develop sepsis in the window.
 
-The GRU does not beat XGBoost. Its AUROC is lower in both directions, and it has the higher AUPRC only from A to B (0.084 against 0.076, with overlapping intervals). XGBoost is served, because it wins on AUROC and utility in both directions and carries the SHAP explanation path (Decisions log, P3.14).
+The GRU does not beat XGBoost. Its AUROC is lower in both directions, and it has the higher AUPRC only from A to B (0.084 against 0.076, with overlapping intervals). XGBoost is served, because it wins on AUROC and utility in both directions and carries the SHAP explanation path.
 
 ### Cross-site transfer
 

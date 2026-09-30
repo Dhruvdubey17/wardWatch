@@ -105,8 +105,6 @@ No alert arrives in under a second because an hour is scored only once it has cl
 - Alert writes use ETags. Two clinicians acting on the same alert get a 412 for the second, with who changed it, instead of a silent overwrite.
 - MSH-7 carries the real send time while clinical times run on the simulator's accelerated clock, so the MSH-7 to alert latency (`wardwatch_msh7_to_alert_publish_seconds`) is a wall-clock measurement.
 
-The full log of decisions and the reasons for them is in [PROGRESS.md](PROGRESS.md).
-
 ## Limitations
 
 - The data is simulated. Physiology comes from PhysioNet ICU stays replayed as if they were a ward, and identities come from Synthea. Real ward data would differ in case mix, measurement frequency and alert rates.
