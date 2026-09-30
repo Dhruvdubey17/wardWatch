@@ -8,6 +8,7 @@ from contextlib import contextmanager
 from sqlalchemy import text
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine
+from testcontainers.community.postgres import PostgresContainer
 
 POSTGRES_ENV = "WARDWATCH_TEST_POSTGRES_URL"
 
@@ -19,8 +20,6 @@ def postgres_server() -> Iterator[str]:
     if configured:
         yield configured
         return
-    from testcontainers.postgres import PostgresContainer
-
     with PostgresContainer("postgres:16-alpine", driver="asyncpg") as container:
         yield container.get_connection_url()
 

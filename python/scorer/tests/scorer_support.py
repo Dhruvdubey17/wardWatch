@@ -59,6 +59,10 @@ def observation_records(
                     "observation": {
                         "resourceType": "Observation",
                         "id": f"{encounter_id}-{hour}-{entry.code}",
+                        "status": "final",
+                        "category": [{"coding": [{"code": entry.category}]}],
+                        "subject": {"reference": f"Patient/MRN-{encounter_id}"},
+                        "encounter": {"reference": f"Encounter/{encounter_id}"},
                         "code": {"coding": [{"system": "http://loinc.org", "code": entry.code}]},
                         "effectiveDateTime": effective,
                         "valueQuantity": {"value": float(value), "unit": entry.ucum_unit},

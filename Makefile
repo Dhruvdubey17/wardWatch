@@ -43,7 +43,7 @@ setup: setup-tools python-setup
 
 python-lint:
 	cd python && uv run ruff check --config pyproject.toml . ../scripts && uv run ruff format --config pyproject.toml --check . ../scripts
-	cd python && uv run mypy layer_markers.py conftest.py tests
+	cd python && uv run mypy layer_markers.py conftest.py tests testsupport
 	cd python && uv run mypy ../scripts/lint_prose.py ../scripts/tests
 	cd python && for pkg in $(PY_PACKAGES); do uv run mypy $$pkg/src $$( [ -n "$$(ls $$pkg/tests/*/*.py 2>/dev/null)" ] && echo $$pkg/tests ) || exit 1; done
 

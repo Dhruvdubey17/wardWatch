@@ -63,7 +63,7 @@ ignore = [
 strict = true
 python_version = "3.12"
 warn_unreachable = true
-mypy_path = "."
+mypy_path = ".:testsupport:scorer/tests"
 
 # The hl7 package ships no type information and has no stub package. It is used
 # only in tests as an independent parser.
@@ -78,7 +78,7 @@ module = ["sklearn", "sklearn.*", "shap", "shap.*", "aiokafka", "aiokafka.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-pythonpath = [".", "../scripts", "scorer/tests"]
+pythonpath = [".", "../scripts", "scorer/tests", "testsupport"]
 addopts = "-p layer_markers --strict-markers -ra"
 markers = [
     "unit: in-process test with no network, no Docker and no real clock",

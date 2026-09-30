@@ -1,5 +1,6 @@
 """Kafka for FHIR service integration tests: a local broker or testcontainers."""
 
+import asyncio
 import json
 import os
 import uuid
@@ -9,6 +10,7 @@ from typing import Any
 
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 from aiokafka.admin import AIOKafkaAdminClient, NewTopic
+from testcontainers.community.kafka import KafkaContainer
 
 KAFKA_ENV = "WARDWATCH_TEST_KAFKA_BOOTSTRAP"
 
@@ -19,8 +21,6 @@ def kafka_server() -> Iterator[str]:
     if configured:
         yield configured
         return
-    from testcontainers.kafka import KafkaContainer
-
     with KafkaContainer("confluentinc/cp-kafka:7.6.1").with_kraft() as container:
         yield container.get_bootstrap_server()
 
@@ -63,8 +63,6 @@ async def read_all(
     await consumer.start()
     records: list[tuple[str, dict[str, Any]]] = []
     try:
-        import asyncio
-
         deadline = asyncio.get_running_loop().time() + timeout_s
         while len(records) < expected and asyncio.get_running_loop().time() < deadline:
             batch = await consumer.getmany(timeout_ms=500)
