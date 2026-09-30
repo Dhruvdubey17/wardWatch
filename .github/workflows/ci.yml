@@ -114,3 +114,43 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker build -f ingest/Dockerfile -t wardwatch-ingest:ci .
+
+  python-lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: python/uv.lock
+      - run: cd python && uv sync --frozen
+      - run: make python-lint
+
+  python-unit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: python/uv.lock
+      - run: cd python && uv sync --frozen
+      - run: make python-test-unit
+
+  python-integration:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y clang ninja-build librdkafka-dev pkg-config
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: python/uv.lock
+      - uses: actions/cache@v4
+        with:
+          path: ingest/build/debug/_deps
+          key: cpp-debug-deps-${{ hashFiles('ingest/cmake/Dependencies.cmake') }}
+      - run: cd python && uv sync --frozen
+      - run: make python-test-integration
+      - run: make python-coverage
