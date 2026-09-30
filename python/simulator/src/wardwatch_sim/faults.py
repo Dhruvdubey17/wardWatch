@@ -85,7 +85,12 @@ def trailing_separators(text: str) -> str:
 
 
 def non_ascii_family_name(text: str) -> str:
+    """Add a UTF-8 letter to the family name and drop any MSH-18 character set."""
     segments = _segments(text)
+    header = segments[0].split("|")
+    # header[17] is MSH-18; the builder sets it when a name is already non-ASCII.
+    if len(header) > 17:
+        segments[0] = "|".join(header[:17]).rstrip("|")
     for index, segment in enumerate(segments):
         fields = segment.split("|")
         if fields[0] == "PID":

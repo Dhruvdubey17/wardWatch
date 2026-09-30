@@ -21,7 +21,7 @@ CPP_SOURCES = $(shell cd $(INGEST) && for f in $$(git ls-files -co --exclude-sta
 py_test_dirs = $(shell cd python && for d in tests/$(1) ../scripts/tests/$(1) $(addsuffix /tests/$(1),$(PY_PACKAGES)); do \
 	ls $$d/test_*.py >/dev/null 2>&1 && echo $$d; done)
 
-.PHONY: python-setup python-lint python-test-unit python-test-integration
+.PHONY: python-coverage python-setup python-lint python-test-unit python-test-integration
 .PHONY: ingest-coverage ingest-build ingest-lint ingest-test-unit ingest-test-integration ingest-sanitize ingest-fuzz
 .PHONY: format help setup setup-tools data lint lint-prose test-unit test-integration test \
 	sanitize fuzz bench train eval coverage check up demo down autopilot
@@ -49,7 +49,7 @@ python-lint:
 python-test-unit:
 	cd python && uv run pytest -c pyproject.toml -q -m unit $(call py_test_dirs,unit)
 
-python-test-integration:
+python-test-integration: ingest-build
 	@dirs="$(call py_test_dirs,integration)"; if [ -z "$$dirs" ]; then echo "python-test-integration: no integration suites yet"; \
 	else cd python && uv run pytest -c pyproject.toml -q -m integration $$dirs; fi
 
@@ -126,7 +126,19 @@ eval:
 ingest-coverage:
 	./scripts/ingest_coverage.sh
 
-coverage: ingest-coverage
+# Line coverage gates from CLAUDE.md, measured over each package's unit and
+# integration suites together. Packages without tests yet are skipped.
+PY_COVERAGE_GATES := simulator:wardwatch_sim:85 ml:wardwatch_ml:90 fhir_service:wardwatch_fhir:85 scorer:wardwatch_scorer:85
+
+python-coverage: ingest-build
+	cd python && for gate in $(PY_COVERAGE_GATES); do \
+		pkg=$${gate%%:*}; rest=$${gate#*:}; module=$${rest%%:*}; minimum=$${rest#*:}; \
+		ls $$pkg/tests/*/test_*.py >/dev/null 2>&1 || { echo "python-coverage: $$pkg has no tests yet"; continue; }; \
+		uv run pytest -c pyproject.toml -q -p no:randomly --cov=$$module --cov-report=term-missing:skip-covered \
+			--cov-fail-under=$$minimum $$pkg/tests || exit 1; \
+	done
+
+coverage: ingest-coverage python-coverage
 
 check: lint lint-prose test sanitize coverage
 

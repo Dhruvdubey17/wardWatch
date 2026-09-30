@@ -91,6 +91,14 @@ def test_non_ascii_bytes_in_family_name_without_charset() -> None:
     assert "UNICODE" not in text
 
 
+def test_non_ascii_fault_removes_a_declared_character_set() -> None:
+    declared = ORU.replace("|2.5.1\r", "|2.5.1||||||UNICODE UTF-8\r", 1)
+    text, _ = only("non_ascii_bytes").apply(declared, "C1", "result")
+    assert "UNICODE" not in text
+    assert text.split("\r")[0].endswith("|2.5.1")
+    assert "Lindgrené" in text
+
+
 def test_oversized_frame_exceeds_the_limit() -> None:
     text, fault = only("oversized_frame", max_frame_bytes=2048).apply(ORU, "C1", "result")
     assert len(text.encode()) > 2048

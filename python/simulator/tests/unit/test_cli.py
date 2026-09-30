@@ -28,21 +28,34 @@ def test_replay_options() -> None:
     config = parse_config(
         [
             "replay",
-            "--host", "ingest",
-            "--port", "9000",
-            "--physionet-dir", "/data/p",
-            "--synthea-dir", "/data/s",
-            "--sites", "B",
-            "--beds", "4",
-            "--seconds-per-hour", "0.5",
-            "--seed", "7",
-            "--fault", "missing_pid=0.1",
-            "--fault", "lf_segment_terminators=0.05",
-            "--max-frame-bytes", "4096",
-            "--limit", "3",
-            "--report", "out.json",
+            "--host",
+            "ingest",
+            "--port",
+            "9000",
+            "--physionet-dir",
+            "/data/p",
+            "--synthea-dir",
+            "/data/s",
+            "--sites",
+            "B",
+            "--beds",
+            "4",
+            "--seconds-per-hour",
+            "0.5",
+            "--seed",
+            "7",
+            "--fault",
+            "missing_pid=0.1",
+            "--fault",
+            "lf_segment_terminators=0.05",
+            "--max-frame-bytes",
+            "4096",
+            "--limit",
+            "3",
+            "--report",
+            "out.json",
         ]
-    )  # fmt: skip
+    )
     assert isinstance(config, ReplayConfig)
     assert config.endpoint == Endpoint("ingest", 9000)
     assert config.physionet_dir == Path("/data/p")

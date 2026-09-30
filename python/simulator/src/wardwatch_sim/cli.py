@@ -3,6 +3,9 @@
 import argparse
 import json
 import logging
+import os
+import platform
+import subprocess
 import sys
 import threading
 import time
@@ -258,6 +261,27 @@ def _percentile(values: list[float], fraction: float) -> float:
     return ordered[index]
 
 
+def host_description() -> dict[str, str]:
+    """CPU model and platform, so a throughput figure is never quoted without its hardware."""
+    model = platform.processor() or "unknown"
+    if sys.platform == "darwin":
+        result = subprocess.run(
+            ["sysctl", "-n", "machdep.cpu.brand_string"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        model = result.stdout.strip() or model
+    else:
+        cpuinfo = Path("/proc/cpuinfo")
+        if cpuinfo.exists():
+            for line in cpuinfo.read_text().splitlines():
+                if line.startswith("model name"):
+                    model = line.split(":", 1)[1].strip()
+                    break
+    return {"cpu_model": model, "platform": platform.platform(), "cpu_count": str(os.cpu_count())}
+
+
 def run_load(config: LoadConfig) -> int:
     """Send distinct ORU^R01 messages at a target rate and report what was acknowledged."""
     template = (contracts_dir() / "hl7" / "oru_r01.hl7").read_bytes().decode("ascii")
@@ -306,6 +330,7 @@ def run_load(config: LoadConfig) -> int:
             key: str(value) if isinstance(value, Path) else value
             for key, value in asdict(config).items()
         },
+        "host": host_description(),
         "elapsed_seconds": round(elapsed, 3),
         "acknowledged": acknowledged,
         "acks": dict(codes),

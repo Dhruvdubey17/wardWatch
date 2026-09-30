@@ -1,0 +1,30 @@
+{
+  "ack_latency_ms": {
+    "max": 55.709,
+    "p50": 0.777,
+    "p95": 1.898,
+    "p99": 2.589
+  },
+  "acknowledged": 470079,
+  "acks": {
+    "AA": 470079
+  },
+  "command": "load",
+  "config": {
+    "connections": 32,
+    "duration": 15.0,
+    "endpoint": {
+      "host": "127.0.0.1",
+      "port": 57708
+    },
+    "output": "../ingest/bench/results/e2e-load-null-sink.json",
+    "rate": 100000.0
+  },
+  "elapsed_seconds": 15.001,
+  "host": {
+    "cpu_count": "8",
+    "cpu_model": "Apple M3",
+    "platform": "macOS-26.1-arm64-arm-64bit"
+  },
+  "throughput_per_second": 31336.6
+}
