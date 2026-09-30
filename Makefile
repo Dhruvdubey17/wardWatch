@@ -22,7 +22,7 @@ py_test_dirs = $(shell cd python && for d in tests/$(1) ../scripts/tests/$(1) $(
 
 .PHONY: python-setup python-lint python-test-unit python-test-integration
 .PHONY: ingest-build ingest-lint ingest-test-unit ingest-sanitize ingest-fuzz
-.PHONY: help setup setup-tools data lint lint-prose test-unit test-integration test \
+.PHONY: format help setup setup-tools data lint lint-prose test-unit test-integration test \
 	sanitize fuzz bench train eval coverage check up demo down autopilot
 
 help:
@@ -76,6 +76,10 @@ ingest-fuzz:
 		name=$$(basename $$target); corpus=build/fuzz/corpus/$$name; mkdir -p $$corpus; \
 		seeds=fuzz/corpus/$$name; [ -d $$seeds ] || seeds=""; \
 		$$target -max_total_time=$(FUZZ_SECONDS) -print_final_stats=1 $$corpus $$seeds || exit 1; done
+
+format:
+	cd $(INGEST) && clang-format -i $(CPP_SOURCES)
+	cd python && uv run ruff format -q --config pyproject.toml . ../scripts && uv run ruff check -q --fix --config pyproject.toml . ../scripts
 
 lint: python-lint ingest-lint
 
