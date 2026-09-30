@@ -4,13 +4,19 @@ import numpy as np
 import pandas as pd
 import pytest
 from wardwatch_ml.metrics import (
+    RankedScores,
     add_alerts,
     auprc,
     auroc,
     bootstrap_interval,
+    bootstrap_weights,
     event_metrics,
+    normalized_from_components,
     normalized_utility,
+    stay_summary,
     stay_utility,
+    summary_metrics,
+    utility_components,
 )
 from wardwatch_ml.policy import AlertPolicy
 
@@ -156,10 +162,16 @@ def test_alert_early_than_48_hours_does_not_count() -> None:
 
 
 def test_bootstrap_interval_is_reproducible_and_brackets_the_estimate() -> None:
-    values = {("A", f"p{i}"): float(i % 2) for i in range(200)}
-    statistic = lambda keys: float(np.mean([values[k] for k in keys]))  # noqa: E731
-    first = bootstrap_interval(list(values), statistic, resamples=300, seed=7)
-    again = bootstrap_interval(list(values), statistic, resamples=300, seed=7)
+    values = np.array([float(i % 2) for i in range(200)])
+    weights = bootstrap_weights(len(values), resamples=300, seed=7)
+    assert weights.shape == (300, 200)
+    assert (weights.sum(axis=1) == 200).all()
+
+    def mean(resample: np.ndarray) -> float:
+        return float((resample * values).sum() / resample.sum())
+
+    first = bootstrap_interval(weights, mean)
+    again = bootstrap_interval(bootstrap_weights(200, resamples=300, seed=7), mean)
     assert first == again
     assert first[0] < 0.5 < first[1]
     # Standard error of a proportion near 0.5 over 200 stays is about 0.035.
@@ -167,6 +179,48 @@ def test_bootstrap_interval_is_reproducible_and_brackets_the_estimate() -> None:
 
 
 def test_bootstrap_interval_all_nan_is_nan() -> None:
-    low, high = bootstrap_interval([("A", "p")], lambda _: float("nan"), resamples=5)
+    low, high = bootstrap_interval(np.ones((5, 1)), lambda _: float("nan"))
     assert math.isnan(low)
     assert math.isnan(high)
+
+
+def test_summary_weights_equal_duplicated_stays() -> None:
+    scored, outcomes = scored_cohort()
+    alerts = add_alerts(scored, AlertPolicy(threshold=0.5, refractory_hours=1))
+    summary = stay_summary(scored, alerts, outcomes)
+    weighted = summary_metrics(summary, np.array([2.0, 1.0, 1.0]))
+    duplicated = summary_metrics(pd.concat([summary, summary.iloc[[0]]], ignore_index=True))
+    assert weighted == duplicated
+    assert summary_metrics(summary) == event_metrics(scored, alerts, outcomes)
+
+
+@pytest.mark.parametrize("seed", [0, 1, 2])
+def test_ranked_scores_match_sklearn_including_ties(seed: int) -> None:
+    random = np.random.default_rng(seed)
+    labels = random.integers(0, 2, size=500)
+    scores = np.round(random.normal(size=500) + labels, 1)  # rounding creates ties
+    ranked = RankedScores(labels, scores, np.arange(500))
+    assert ranked.auroc() == pytest.approx(auroc(labels, scores))
+    assert ranked.auprc() == pytest.approx(auprc(labels, scores))
+
+
+def test_ranked_scores_weights_equal_repeated_rows() -> None:
+    random = np.random.default_rng(5)
+    stays = np.repeat(np.arange(50), 4)
+    labels = random.integers(0, 2, size=200)
+    scores = random.normal(size=200)
+    stay_weights = random.integers(0, 3, size=50).astype(np.float64)
+    ranked = RankedScores(labels, scores, stays)
+    repeat = np.repeat(np.arange(200), stay_weights[stays].astype(int))
+    assert ranked.auroc(stay_weights) == pytest.approx(auroc(labels[repeat], scores[repeat]))
+    assert ranked.auprc(stay_weights) == pytest.approx(auprc(labels[repeat], scores[repeat]))
+
+
+def test_utility_components_reweight_like_repeated_stays() -> None:
+    predictions = [0] * 12
+    predictions[6] = predictions[9] = 1
+    stays = [(SEPTIC_LABELS, predictions), ([0] * 8, [1, 0, 0, 0, 0, 0, 0, 0])]
+    components = utility_components(stays)
+    assert normalized_from_components(components, np.array([1.0, 3.0])) == pytest.approx(
+        normalized_utility([stays[0], stays[1], stays[1], stays[1]])
+    )

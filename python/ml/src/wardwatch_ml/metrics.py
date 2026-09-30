@@ -76,15 +76,30 @@ def _best_predictions(labels: npt.NDArray[np.bool_]) -> npt.NDArray[np.bool_]:
     return best
 
 
-def normalized_utility(stays: Sequence[tuple[npt.ArrayLike, npt.ArrayLike]]) -> float:
-    """Challenge score: (observed - inaction) / (best - inaction) over all stays."""
-    observed = best = inaction = 0.0
+def utility_components(stays: Sequence[tuple[npt.ArrayLike, npt.ArrayLike]]) -> np.ndarray:
+    """(stays, 3) array of observed, best and inaction utility per stay."""
+    rows = []
     for labels, predictions in stays:
         label_values = np.asarray(labels, dtype=bool)
-        observed += stay_utility(label_values, predictions)
-        best += stay_utility(label_values, _best_predictions(label_values))
-        inaction += stay_utility(label_values, np.zeros(len(label_values), dtype=bool))
-    return (observed - inaction) / (best - inaction)
+        rows.append(
+            (
+                stay_utility(label_values, predictions),
+                stay_utility(label_values, _best_predictions(label_values)),
+                stay_utility(label_values, np.zeros(len(label_values), dtype=bool)),
+            )
+        )
+    return np.array(rows, dtype=np.float64).reshape(-1, 3)
+
+
+def normalized_from_components(components: np.ndarray, weights: np.ndarray | None = None) -> float:
+    weight = np.ones(len(components)) if weights is None else weights
+    observed, best, inaction = (weight[:, None] * components).sum(axis=0)
+    return float((observed - inaction) / (best - inaction))
+
+
+def normalized_utility(stays: Sequence[tuple[npt.ArrayLike, npt.ArrayLike]]) -> float:
+    """Challenge score: (observed - inaction) / (best - inaction) over all stays."""
+    return normalized_from_components(utility_components(stays))
 
 
 @dataclass(frozen=True)
@@ -112,6 +127,111 @@ def add_alerts(scored: pd.DataFrame, policy: AlertPolicy, score_column: str = "s
     return flags
 
 
+def stay_summary(scored: pd.DataFrame, alerts: pd.Series, outcomes: pd.DataFrame) -> pd.DataFrame:
+    """Per-stay counts that every event metric is built from.
+
+    Computed once per operating point; bootstrap resamples then only reweight
+    these rows, which keeps 1,000 resamples cheap on 40,000 stays.
+    Septic stays with an unknown onset are marked `excluded`.
+    """
+    by_stay = {
+        (str(record["site"]), str(record["patient_id"])): record
+        for record in outcomes.to_dict("records")
+    }
+    rows = []
+    table = scored[["site", "patient_id", "hour"]].assign(alert=alerts.to_numpy())
+    for _, stay in table.groupby(["site", "patient_id"], sort=False):
+        key = (str(stay["site"].iloc[0]), str(stay["patient_id"].iloc[0]))
+        outcome = by_stay[key]
+        alert_hours = stay.loc[stay["alert"], "hour"].to_numpy(dtype=np.float64)
+        septic = bool(outcome["septic"])
+        known = bool(outcome["onset_known"])
+        true_alerts = 0
+        lead_time = float("nan")
+        if septic and known:
+            onset = float(outcome["onset_hour"])
+            window = alert_hours[
+                (alert_hours >= onset - EVENT_WINDOW_HOURS) & (alert_hours <= onset)
+            ]
+            true_alerts = len(window)
+            if true_alerts:
+                lead_time = onset - float(window.min())
+        rows.append(
+            {
+                "site": key[0],
+                "patient_id": key[1],
+                "excluded": septic and not known,
+                "septic": septic,
+                "hours": len(stay),
+                "alerts": len(alert_hours),
+                "true_alerts": true_alerts,
+                "detected": true_alerts > 0,
+                "lead_time": lead_time,
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def _weighted_percentile(values: np.ndarray, weights: np.ndarray, percent: float) -> float:
+    order = np.argsort(values, kind="stable")
+    sorted_values, sorted_weights = values[order], weights[order]
+    cumulative = np.cumsum(sorted_weights)
+    if cumulative[-1] == 0:
+        return float("nan")
+    # Same convention as np.percentile's linear method when all weights are 1.
+    positions = (cumulative - sorted_weights / 2) / cumulative[-1] * 100
+    return float(np.interp(percent, positions, sorted_values))
+
+
+def summary_metrics(summary: pd.DataFrame, weights: np.ndarray | None = None) -> EventMetrics:
+    """Event metrics from a stay summary, each stay counted `weights` times."""
+    weight = np.ones(len(summary)) if weights is None else np.asarray(weights, dtype=np.float64)
+    excluded = summary["excluded"].to_numpy(dtype=bool)
+    septic = summary["septic"].to_numpy(dtype=bool) & ~excluded
+    clean = ~summary["septic"].to_numpy(dtype=bool)
+    kept = ~excluded
+    hours = summary["hours"].to_numpy(dtype=np.float64)
+    alerts = summary["alerts"].to_numpy(dtype=np.float64)
+    true_alerts = summary["true_alerts"].to_numpy(dtype=np.float64)
+    detected = summary["detected"].to_numpy(dtype=bool)
+    lead = summary["lead_time"].to_numpy(dtype=np.float64)
+
+    septic_weight = float(weight[septic].sum())
+    patient_days = float((weight[kept] * hours[kept]).sum()) / HOURS_PER_DAY
+    clean_days = float((weight[clean] * hours[clean]).sum()) / HOURS_PER_DAY
+    counted_alerts = float((weight[kept] * alerts[kept]).sum())
+    detected_weight = float(weight[septic & detected].sum())
+    with_lead = septic & detected
+    nan = float("nan")
+    lead_values, lead_weights = lead[with_lead], weight[with_lead]
+    has_lead = lead_weights.sum() > 0
+    return EventMetrics(
+        septic_patients=round(septic_weight),
+        unknown_onset_excluded=round(float(weight[excluded].sum())),
+        non_septic_patients=round(float(weight[clean].sum())),
+        event_sensitivity=detected_weight / septic_weight if septic_weight else nan,
+        median_lead_time_hours=_weighted_percentile(lead_values, lead_weights, 50)
+        if has_lead
+        else nan,
+        lead_time_iqr_hours=(
+            (
+                _weighted_percentile(lead_values, lead_weights, 25),
+                _weighted_percentile(lead_values, lead_weights, 75),
+            )
+            if has_lead
+            else (nan, nan)
+        ),
+        alerts=round(counted_alerts),
+        alerts_per_patient_day=counted_alerts / patient_days if patient_days else nan,
+        false_alerts_per_patient_day=(
+            float((weight[clean] * alerts[clean]).sum()) / clean_days if clean_days else nan
+        ),
+        ppv_per_alert=float((weight[kept] * true_alerts[kept]).sum()) / counted_alerts
+        if counted_alerts
+        else nan,
+    )
+
+
 def event_metrics(scored: pd.DataFrame, alerts: pd.Series, outcomes: pd.DataFrame) -> EventMetrics:
     """Event-level results from per-hour alert flags and per-stay outcomes.
 
@@ -119,78 +239,64 @@ def event_metrics(scored: pd.DataFrame, alerts: pd.Series, outcomes: pd.DataFram
     out of every event metric and counted in unknown_onset_excluded. An alert
     is true when it falls within 48 hours before a known onset, inclusive.
     """
-    by_stay = {
-        (str(record["site"]), str(record["patient_id"])): record
-        for record in outcomes.to_dict("records")
-    }
-    table = scored[["site", "patient_id", "hour"]].assign(alert=alerts.to_numpy())
-    stays = table.groupby(["site", "patient_id"], sort=False)
+    return summary_metrics(stay_summary(scored, alerts, outcomes))
 
-    lead_times: list[float] = []
-    detected = true_alerts = counted_alerts = 0
-    septic_known = unknown = non_septic = 0
-    septic_hours = non_septic_hours = 0.0
-    false_alerts_non_septic = 0
-    for _, stay in stays:
-        row = by_stay[(str(stay["site"].iloc[0]), str(stay["patient_id"].iloc[0]))]
-        alert_hours = stay.loc[stay["alert"], "hour"].to_numpy(dtype=np.float64)
-        if bool(row["septic"]) and not bool(row["onset_known"]):
-            unknown += 1
-            continue
-        counted_alerts += len(alert_hours)
-        if bool(row["septic"]):
-            septic_known += 1
-            septic_hours += len(stay)
-            onset = float(row["onset_hour"])
-            in_window = alert_hours[
-                (alert_hours >= onset - EVENT_WINDOW_HOURS) & (alert_hours <= onset)
-            ]
-            true_alerts += len(in_window)
-            if len(in_window):
-                detected += 1
-                lead_times.append(onset - float(in_window.min()))
-        else:
-            non_septic += 1
-            non_septic_hours += len(stay)
-            false_alerts_non_septic += len(alert_hours)
 
-    patient_days = (septic_hours + non_septic_hours) / HOURS_PER_DAY
-    non_septic_days = non_septic_hours / HOURS_PER_DAY
-    nan = float("nan")
-    return EventMetrics(
-        septic_patients=septic_known,
-        unknown_onset_excluded=unknown,
-        non_septic_patients=non_septic,
-        event_sensitivity=detected / septic_known if septic_known else nan,
-        median_lead_time_hours=float(np.median(lead_times)) if lead_times else nan,
-        lead_time_iqr_hours=(
-            (float(np.percentile(lead_times, 25)), float(np.percentile(lead_times, 75)))
-            if lead_times
-            else (nan, nan)
-        ),
-        alerts=counted_alerts,
-        alerts_per_patient_day=counted_alerts / patient_days if patient_days else nan,
-        false_alerts_per_patient_day=(
-            false_alerts_non_septic / non_septic_days if non_septic_days else nan
-        ),
-        ppv_per_alert=true_alerts / counted_alerts if counted_alerts else nan,
-    )
+class RankedScores:
+    """Hour-level scores sorted once, so weighted AUROC and AUPRC are linear per resample."""
+
+    def __init__(
+        self, labels: npt.ArrayLike, scores: npt.ArrayLike, stay_index: npt.ArrayLike
+    ) -> None:
+        score_values = np.asarray(scores, dtype=np.float64)
+        order = np.argsort(-score_values, kind="stable")
+        self.labels = np.asarray(labels, dtype=np.float64)[order]
+        self.scores = score_values[order]
+        self.stay_index = np.asarray(stay_index, dtype=np.int64)[order]
+        # Rows that share a score form one step of the curves.
+        self.last_of_tie = np.append(self.scores[1:] != self.scores[:-1], True)
+
+    def curves(self, stay_weights: np.ndarray | None) -> tuple[np.ndarray, np.ndarray]:
+        weights = (
+            np.ones(len(self.labels)) if stay_weights is None else stay_weights[self.stay_index]
+        )
+        true_positive = np.cumsum(weights * self.labels)[self.last_of_tie]
+        false_positive = np.cumsum(weights * (1 - self.labels))[self.last_of_tie]
+        return true_positive, false_positive
+
+    def auroc(self, stay_weights: np.ndarray | None = None) -> float:
+        tp, fp = self.curves(stay_weights)
+        if tp[-1] == 0 or fp[-1] == 0:
+            return float("nan")
+        tpr = np.concatenate([[0.0], tp / tp[-1]])
+        fpr = np.concatenate([[0.0], fp / fp[-1]])
+        return float(np.trapezoid(tpr, fpr))
+
+    def auprc(self, stay_weights: np.ndarray | None = None) -> float:
+        """Average precision, the step-wise sum sklearn's average_precision_score uses."""
+        tp, fp = self.curves(stay_weights)
+        if tp[-1] == 0:
+            return float("nan")
+        precision = tp / np.maximum(tp + fp, 1e-12)
+        recall = tp / tp[-1]
+        return float(np.sum(np.diff(np.concatenate([[0.0], recall])) * precision))
+
+
+def bootstrap_weights(stays: int, resamples: int = 1000, seed: int = 2019) -> np.ndarray:
+    """(resamples, stays) counts: how often each stay is drawn in each resample."""
+    random = np.random.default_rng(seed)
+    return random.multinomial(stays, np.full(stays, 1.0 / stays), size=resamples).astype(np.float64)
 
 
 def bootstrap_interval(
-    stay_keys: Sequence[tuple[str, str]],
-    statistic: Callable[[list[tuple[str, str]]], float],
-    resamples: int = 1000,
-    seed: int = 2019,
+    weights: np.ndarray,
+    statistic: Callable[[np.ndarray], float],
     level: float = 0.95,
 ) -> tuple[float, float]:
-    """Percentile interval of a statistic over stays resampled with replacement."""
-    random = np.random.default_rng(seed)
-    keys = list(stay_keys)
+    """Percentile interval of a statistic over patient-level bootstrap resamples."""
     values = []
-    for _ in range(resamples):
-        chosen = random.integers(0, len(keys), size=len(keys))
-        value = statistic([keys[index] for index in chosen])
+    for resample in weights:
+        value = statistic(resample)
         if not np.isnan(value):
             values.append(value)
     if not values:
