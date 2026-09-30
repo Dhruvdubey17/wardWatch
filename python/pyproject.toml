@@ -62,6 +62,12 @@ mypy_path = "."
 module = ["hl7", "hl7.*"]
 ignore_missing_imports = true
 
+# scikit-learn and shap ship no type information and have no maintained stub
+# packages; their call sites are wrapped in typed functions.
+[[tool.mypy.overrides]]
+module = ["sklearn", "sklearn.*", "shap", "shap.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 pythonpath = [".", "../scripts"]
 addopts = "-p layer_markers --strict-markers -ra"
