@@ -5,11 +5,12 @@ import logging
 import sys
 import time
 from collections.abc import Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from wardwatch_ml.bundle import model_version, write_bundle
 from wardwatch_ml.cohort import cohort_markdown, cohort_report
 from wardwatch_ml.data import SITE_DIRECTORIES, load_site
 from wardwatch_ml.evaluation import evaluate_site
@@ -37,7 +38,9 @@ class EvalConfig:
         if self.smoke:
             # Fixture-sized: a handful of stays per site, so everything is tiny.
             return TrainingConfig(
-                folds=3,
+                # Two folds: a fixture site keeps only two septic stays after the
+                # calibration split, and each fold needs one.
+                folds=2,
                 calibration_fraction=0.34,
                 seed=self.seed,
                 xgb=XgbParams(max_rounds=30, early_stopping_rounds=10, threads=2, seed=self.seed),
@@ -63,6 +66,14 @@ def build_parser() -> argparse.ArgumentParser:
     evaluate.add_argument("--bootstrap-resamples", type=int, default=1000)
     evaluate.add_argument("--seed", type=int, default=2019)
     evaluate.add_argument("--smoke", action="store_true", help="tiny models for fixtures and CI")
+
+    train = commands.add_parser("train", help="fit the serving bundle on one site")
+    train.add_argument("--data-dir", type=Path, default=REPOSITORY / "data" / "physionet")
+    train.add_argument("--artifacts-dir", type=Path, default=REPOSITORY / "ml" / "artifacts")
+    train.add_argument("--site", default="A", choices=sorted(SITE_DIRECTORIES))
+    train.add_argument("--limit", type=int, default=None)
+    train.add_argument("--seed", type=int, default=2019)
+    train.add_argument("--smoke", action="store_true")
     return parser
 
 
@@ -159,6 +170,30 @@ def run_evaluation(config: EvalConfig, command: str) -> Path:
     return output
 
 
+def run_training(args: argparse.Namespace) -> Path:
+    """Fit on one site and write the serving bundle, pointing `current` at it."""
+    config = EvalConfig(
+        data_dir=args.data_dir,
+        reports_dir=Path(),
+        directions=(),
+        limit=args.limit,
+        bootstrap_resamples=0,
+        seed=args.seed,
+        smoke=args.smoke,
+    )
+    training = replace(config.training(), train_gru=False)
+    frame = load_site(args.data_dir / SITE_DIRECTORIES[args.site], args.site, args.limit)
+    fitted = fit_site(frame, training)
+    sha = git_sha(REPOSITORY)
+    target = write_bundle(fitted, args.artifacts_dir, model_version(sha), sha)
+    current = args.artifacts_dir / "current"
+    if current.is_symlink():
+        current.unlink()
+    current.symlink_to(target.name)
+    log.info("wrote serving bundle %s", target)
+    return target
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
     arguments = list(sys.argv[1:] if argv is None else argv)
@@ -167,6 +202,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "eval":
         config = parse_eval(args, parser)
         run_evaluation(config, "wardwatch-ml " + " ".join(arguments))
+    elif args.command == "train":
+        run_training(args)
     return 0
 
 

@@ -123,8 +123,9 @@ bench:
 		--benchmark_out=bench/results/micro-release.json
 	@echo "bench: wrote ingest/bench/results/micro-release.json"
 
-train:
-	@echo "train: added in Phase 3"
+train: python-env
+	@test -d data/physionet/training_setA || { echo "train: run make data first" >&2; exit 1; }
+	cd python && uv run wardwatch-ml train
 
 eval: python-env
 	@test -d data/physionet/training_setA || { echo "eval: run make data first" >&2; exit 1; }

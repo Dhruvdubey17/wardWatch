@@ -122,7 +122,7 @@ def test_parse_eval_directions() -> None:
     assert config.directions == (("A", "B"),)
     assert config.smoke
     assert config.limit == 5
-    assert config.training().folds == 3
+    assert config.training().folds == 2
     default = parse_eval(parser.parse_args(["eval"]), parser)
     assert default.directions == (("A", "B"), ("B", "A"))
     assert default.training().folds == 5
