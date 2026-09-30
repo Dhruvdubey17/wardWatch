@@ -1,4 +1,5 @@
 add_library(wardwatch_core
+  ack.cpp
   encoding.cpp
   error.cpp
   loinc.cpp
