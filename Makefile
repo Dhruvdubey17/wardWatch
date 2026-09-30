@@ -21,7 +21,7 @@ py_test_dirs = $(shell cd python && for d in tests/$(1) ../scripts/tests/$(1) $(
 	ls $$d/test_*.py >/dev/null 2>&1 && echo $$d; done)
 
 .PHONY: python-setup python-lint python-test-unit python-test-integration
-.PHONY: ingest-build ingest-lint ingest-test-unit ingest-sanitize ingest-fuzz
+.PHONY: ingest-build ingest-lint ingest-test-unit ingest-test-integration ingest-sanitize ingest-fuzz
 .PHONY: format help setup setup-tools data lint lint-prose test-unit test-integration test \
 	sanitize fuzz bench train eval coverage check up demo down autopilot
 
@@ -66,6 +66,9 @@ ingest-lint: ingest-build
 ingest-test-unit: ingest-build
 	cd $(INGEST) && ctest --preset unit
 
+ingest-test-integration: ingest-build
+	cd $(INGEST) && ctest --preset integration
+
 ingest-sanitize:
 	cd $(INGEST) && cmake --preset asan >/dev/null && cmake --build --preset asan && ctest --preset asan
 	cd $(INGEST) && cmake --preset tsan >/dev/null && cmake --build --preset tsan && ctest --preset tsan
@@ -88,7 +91,7 @@ lint-prose:
 
 test-unit: python-test-unit ingest-test-unit
 
-test-integration: python-test-integration
+test-integration: python-test-integration ingest-test-integration
 
 test: test-unit test-integration
 

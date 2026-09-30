@@ -2,7 +2,10 @@
 # with the Google-based format, or flag idioms this codebase uses on purpose:
 # the parser indexes string_views after explicit bounds checks, so the
 # unchecked-access check would only push .at() into the hot path, and
-# three-field error aggregates read fine without designators.
+# three-field error aggregates read fine without designators. The padding
+# analyzer is off because the ring pads its indices to separate cache lines
+# on purpose. make-member-function-const is off because the poller's methods
+# change kernel state through a descriptor, which the check cannot see.
 Checks: >
   bugprone-*,
   cert-*,
@@ -30,7 +33,9 @@ Checks: >
   -cert-err58-cpp,
   -portability-avoid-pragma-once,
   -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access,
-  -modernize-use-designated-initializers
+  -modernize-use-designated-initializers,
+  -clang-analyzer-optin.performance.Padding,
+  -readability-make-member-function-const
 WarningsAsErrors: '*'
 HeaderFilterRegex: '.*/ingest/(include|src|apps)/.*'
 CheckOptions:

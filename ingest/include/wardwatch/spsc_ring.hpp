@@ -9,6 +9,7 @@
 #include <optional>
 #include <stdexcept>
 #include <utility>
+#include <vector>
 
 namespace wardwatch {
 
@@ -28,10 +29,7 @@ template <typename T>
 class SpscRing {
   public:
     explicit SpscRing(std::size_t capacity)
-        : capacity_(capacity),
-          mask_(capacity - 1),
-          slots_(std::make_unique<Slot[]>(
-              capacity)) {  // NOLINT(modernize-avoid-c-arrays): owned slot array
+        : capacity_(capacity), mask_(capacity - 1), slots_(capacity) {
         if (capacity == 0 || !std::has_single_bit(capacity)) {
             throw std::invalid_argument("SpscRing capacity must be a power of two");
         }
@@ -110,7 +108,7 @@ class SpscRing {
 
     const std::size_t capacity_;
     const std::size_t mask_;
-    std::unique_ptr<Slot[]> slots_;  // NOLINT(modernize-avoid-c-arrays): owned slot array
+    std::vector<Slot> slots_;
 
     // Written by the consumer, read by the producer.
     alignas(kCacheLineSize) std::atomic<std::size_t> head_{0};
