@@ -19,7 +19,7 @@ from wardwatch_ml.contracts import contracts_dir
 from wardwatch_ml.data import SITE_DIRECTORIES, iter_stays
 
 from wardwatch_sim.clock import SystemClock
-from wardwatch_sim.control_ids import ControlIdSequence
+from wardwatch_sim.control_ids import ControlIdSequence, run_tag
 from wardwatch_sim.faults import FaultInjector, parse_rates
 from wardwatch_sim.identities import IdentityAssigner
 from wardwatch_sim.mllp import DeliveryError, MllpClient, TcpTransport
@@ -194,11 +194,15 @@ def run_replay(config: ReplayConfig) -> int:
     if not identities:
         log.error("no Synthea patients in %s; run make data first", config.synthea_dir)
         return 1
+    started = datetime.now(UTC)
+    tag = run_tag(started)
     ward = Ward(
         stays=_stays(config),
         beds=config.beds,
         assigner=IdentityAssigner(identities, config.seed),
-        simulated_start=datetime.now(UTC).replace(minute=0, second=0, microsecond=0),
+        control_ids=ControlIdSequence(f"SIM{tag}"),
+        encounter_ids=ControlIdSequence(f"ENC{tag}", width=6),
+        simulated_start=started.replace(minute=0, second=0, microsecond=0),
         seconds_per_hour=config.seconds_per_hour,
     )
     injector = FaultInjector(config.fault_rates, config.seed, config.max_frame_bytes)
@@ -239,7 +243,7 @@ def _sent_control_id(text: str) -> str:
 def run_synthea(config: SyntheaConfig) -> int:
     client = _client(config.endpoint)
     stats = DeliveryStats()
-    control_ids = ControlIdSequence("SYN")
+    control_ids = ControlIdSequence(f"SYN{run_tag(datetime.now(UTC))}")
     for patient in load_patients(config.synthea_dir):
         for text in convert_patient(patient, control_ids).messages:
             stats.sent += 1
