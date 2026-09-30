@@ -193,7 +193,9 @@ TEST_F(IngestBinary, TwoHundredConcurrentConnections) {
                     oru_with_control_id("K" + std::to_string(c) + "-" + std::to_string(m)));
             }
             for (int m = 0; m < kMessagesEach; ++m) {
-                const auto ack = client.read_ack();
+                // 4,000 messages queue behind one validation thread, and under
+                // the sanitizers the last client can wait tens of seconds.
+                const auto ack = client.read_ack(std::chrono::seconds(60));
                 if (!ack || ack_code(*ack) != "AA") {
                     return;
                 }

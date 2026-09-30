@@ -70,9 +70,18 @@ ingest-test-unit: ingest-build
 ingest-test-integration: ingest-build
 	cd $(INGEST) && ctest --preset integration
 
+# CMake silently drops preset variables when it resets a cache after a
+# compiler change, so each sanitizer build checks its flags before testing.
+check_cache = grep -q '^$(2)$$' $(INGEST)/build/$(1)/CMakeCache.txt || \
+	{ echo "build/$(1) lost $(2); delete ingest/build/$(1)/CMakeCache.txt and rerun" >&2; exit 1; }
+
 ingest-sanitize:
-	cd $(INGEST) && cmake --preset asan >/dev/null && cmake --build --preset asan && ctest --preset asan
-	cd $(INGEST) && cmake --preset tsan >/dev/null && cmake --build --preset tsan && ctest --preset tsan
+	cd $(INGEST) && cmake --preset asan >/dev/null && cmake --build --preset asan
+	$(call check_cache,asan,WARDWATCH_SANITIZERS:STRING=address;undefined)
+	cd $(INGEST) && ctest --preset asan
+	cd $(INGEST) && cmake --preset tsan >/dev/null && cmake --build --preset tsan
+	$(call check_cache,tsan,WARDWATCH_SANITIZERS:STRING=thread)
+	cd $(INGEST) && ctest --preset tsan
 
 ingest-fuzz:
 	cd $(INGEST) && cmake --preset fuzz >/dev/null && cmake --build --preset fuzz
@@ -102,7 +111,11 @@ sanitize: ingest-sanitize
 fuzz: ingest-fuzz
 
 bench:
-	@echo "bench: added in Phase 1 task P1.14"
+	cd $(INGEST) && cmake --preset release >/dev/null && cmake --build --preset release --target wardwatch_bench
+	cd $(INGEST) && ./build/release/bench/wardwatch_bench --benchmark_repetitions=5 \
+		--benchmark_report_aggregates_only=true --benchmark_out_format=json \
+		--benchmark_out=bench/results/micro-release.json
+	@echo "bench: wrote ingest/bench/results/micro-release.json"
 
 train:
 	@echo "train: added in Phase 3"

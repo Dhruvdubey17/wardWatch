@@ -8,6 +8,8 @@
 #include <string_view>
 #include <vector>
 
+#include <nlohmann/json.hpp>
+
 #include "wardwatch/ack.hpp"
 #include "wardwatch/encoding.hpp"
 #include "wardwatch/message.hpp"
@@ -54,7 +56,12 @@ inline void run_parser(std::span<const std::uint8_t> data) {
     // The ACK must itself parse, whatever the input put into its fields.
     check(Message::parse(ack).has_value());
     if (processed.result.disposition == Disposition::accepted) {
-        static_cast<void>(build_validated_payload(message, processed.result, now));
+        // Whatever bytes arrive, an accepted message must serialize to valid
+        // JSON; nlohmann is the independent judge.
+        const auto payload = build_validated_payload(message, processed.result, now);
+        if (payload) {
+            check(nlohmann::json::accept(*payload));
+        }
     }
 }
 

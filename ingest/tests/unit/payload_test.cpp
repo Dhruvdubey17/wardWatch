@@ -116,6 +116,60 @@ TEST(ValidatedPayload, InvalidUtf8BecomesReplacementCharacter) {
     EXPECT_EQ(payload.at("segments")[1].at("fields")[4][0][0][0], "Lindgr\xEF\xBF\xBDn");
 }
 
+struct TextCase {
+    std::string_view name;
+    std::string_view family;
+    std::string_view expected;
+};
+
+class JsonText : public ::testing::TestWithParam<TextCase> {};
+
+// PID-5.1 carries the text; the payload must be valid JSON that decodes back
+// to the expected string.
+TEST_P(JsonText, IsEscapedAndSanitized) {
+    auto text = read_contract("hl7/oru_r01.hl7");
+    text.replace(text.find("Lindgren"), 8, GetParam().family);
+    Validator validator;
+    auto processed = validator.process(std::vector<char>(text.begin(), text.end()));
+    ASSERT_TRUE(processed.message.has_value());
+    const auto payload =
+        build_validated_payload(*processed.message, processed.result, example_time());
+    ASSERT_TRUE(payload.has_value());
+    ASSERT_TRUE(json::accept(*payload)) << *payload;
+    EXPECT_EQ(json::parse(*payload).at("segments")[1].at("fields")[4][0][0][0],
+              GetParam().expected);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    Table, JsonText,
+    ::testing::Values(TextCase{"quote_and_backslash", "O\"Brien\\E\\x", "O\"Brien\\x"},
+                      TextCase{"control_characters",
+                               "a\tb\x01"
+                               "c",
+                               "a\tb\x01"
+                               "c"},
+                      TextCase{"hex_escape_newline", "a\\X0A\\b", "a\nb"},
+                      TextCase{"two_byte_utf8", "M\xC3\xBCller", "M\xC3\xBCller"},
+                      TextCase{"four_byte_utf8", "x\xF0\x9F\x98\x80y", "x\xF0\x9F\x98\x80y"},
+                      TextCase{"lone_latin1", "Lindgr\xE9n", "Lindgr\xEF\xBF\xBDn"},
+                      TextCase{"overlong_slash",
+                               "a\xC0\xAF"
+                               "b",
+                               "a\xEF\xBF\xBD\xEF\xBF\xBD"
+                               "b"},
+                      TextCase{"surrogate",
+                               "a\xED\xA0\x80"
+                               "b",
+                               "a\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD"
+                               "b"},
+                      TextCase{"above_max",
+                               "a\xF4\x90\x80\x80"
+                               "b",
+                               "a\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD"
+                               "b"},
+                      TextCase{"truncated_sequence", "ab\xE2\x82", "ab\xEF\xBF\xBD\xEF\xBF\xBD"}),
+    [](const auto& info) { return std::string(info.param.name); });
+
 TEST(DeadLetterPayload, MatchesContractExample) {
     const std::string raw =
         "MSH|^~\\&|WWSIM|WARDWATCH_ICU|WARDWATCH|WARDWATCH|20241315130005+0000||ORU^R01^ORU_R01|"
