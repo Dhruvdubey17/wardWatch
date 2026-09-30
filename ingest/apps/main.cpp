@@ -9,6 +9,7 @@
 
 #include "wardwatch/cli.hpp"
 #include "wardwatch/file_sink.hpp"
+#include "wardwatch/metrics_http.hpp"
 #include "wardwatch/server.hpp"
 #include "wardwatch/sink.hpp"
 #ifdef WARDWATCH_HAVE_KAFKA
@@ -87,13 +88,25 @@ int run(const std::vector<std::string_view>& args) {
         std::cerr << "wardwatch-ingest: " << started.error() << "\n";
         return 1;
     }
-    std::cout << std::format(R"({{"event":"listening","port":{}}})", server.port()) << '\n'
+    wardwatch::MetricsHttpServer metrics_http(
+        options->metrics_bind_address, options->metrics_port,
+        [&] { return render_metrics(metrics, server.gauges()); });
+    if (auto started = metrics_http.start(); !started) {
+        std::cerr << "wardwatch-ingest: " << started.error() << "\n";
+        server.request_stop();
+        server.wait();
+        return 1;
+    }
+    std::cout << std::format(R"({{"event":"listening","port":{},"metrics_port":{}}})",
+                             server.port(), metrics_http.port())
+              << '\n'
               << std::flush;
 
     int received = 0;
     sigwait(&signals, &received);
     server.request_stop();
     server.wait();
+    metrics_http.stop();
     std::cout << std::format(R"({{"event":"stopped","signal":{},"accepted":{}}})", received,
                              metrics.messages_accepted.load())
               << '\n'

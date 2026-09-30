@@ -7,6 +7,7 @@ add_library(wardwatch_core
   loinc.cpp
   message.cpp
   metrics.cpp
+  metrics_http.cpp
   mllp.cpp
   payload.cpp
   poller.cpp
