@@ -1,5 +1,6 @@
 import uuid
 from collections.abc import AsyncIterator, Iterator
+from pathlib import Path
 
 import pytest
 from fhir_database import postgres_server
@@ -12,8 +13,13 @@ from wardwatch_ml.bundle import ServingBundle
 
 
 @pytest.fixture(scope="session")
-def bundle(tmp_path_factory: pytest.TempPathFactory) -> ServingBundle:
+def bundle_directory(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return train_bundle(tmp_path_factory.mktemp("bundle"))
+
+
+@pytest.fixture(scope="session")
+def bundle(bundle_directory: Path) -> ServingBundle:
+    return ServingBundle.load(bundle_directory)
 
 
 @pytest.fixture(scope="session")

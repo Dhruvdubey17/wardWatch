@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
-from wardwatch_ml.bundle import ServingBundle, write_bundle
+from wardwatch_ml.bundle import write_bundle
 from wardwatch_ml.contracts import loinc_by_variable
 from wardwatch_ml.data import load_site, read_stay
 from wardwatch_ml.gru_model import GruParams
@@ -18,7 +18,8 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures"
 ADMITTED = datetime(2024, 3, 15, 8, 0, tzinfo=UTC)
 
 
-def train_bundle(directory: Path) -> ServingBundle:
+def train_bundle(directory: Path) -> Path:
+    """Train a small bundle under directory and return the bundle's own directory."""
     config = TrainingConfig(
         folds=2,
         calibration_fraction=0.34,
@@ -27,7 +28,7 @@ def train_bundle(directory: Path) -> ServingBundle:
         train_gru=False,
     )
     fitted = fit_site(load_site(ML_FIXTURES / "training_setA", "A"), config)
-    return ServingBundle.load(write_bundle(fitted, directory, "xgb-test-0000000", "0" * 40))
+    return write_bundle(fitted, directory, "xgb-test-0000000", "0" * 40)
 
 
 def stay_frame(name: str) -> pd.DataFrame:
