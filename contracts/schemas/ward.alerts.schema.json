@@ -141,6 +141,7 @@
         "required": [
           "feature",
           "label",
+          "unit",
           "value",
           "contribution"
         ],
@@ -158,7 +159,12 @@
             ]
           },
           "contribution": {
-            "type": "number"
+            "type": "number",
+            "description": "SHAP contribution to the margin (log-odds)."
+          },
+          "unit": {
+            "type": "string",
+            "description": "Display unit of value, empty when unitless."
           }
         }
       }

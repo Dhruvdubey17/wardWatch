@@ -23,32 +23,37 @@
   },
   "top_factors": [
     {
-      "feature": "resp_delta_6h",
+      "feature": "Resp_delta_6h",
       "label": "Respiratory rate, change over 6 h",
+      "unit": "/min",
       "value": 8.0,
       "contribution": 0.41
     },
     {
-      "feature": "lactate_last",
+      "feature": "Lactate_last",
       "label": "Lactate, latest",
+      "unit": "mmol/L",
       "value": 3.1,
       "contribution": 0.33
     },
     {
-      "feature": "hr_last",
+      "feature": "HR_last",
       "label": "Heart rate, latest",
+      "unit": "/min",
       "value": 112.0,
       "contribution": 0.21
     },
     {
-      "feature": "temp_max_12h",
+      "feature": "Temp_max_12h",
       "label": "Temperature, highest over 12 h",
+      "unit": "°C",
       "value": 38.6,
       "contribution": 0.12
     },
     {
-      "feature": "sbp_min_6h",
+      "feature": "SBP_min_6h",
       "label": "Systolic blood pressure, lowest over 6 h",
+      "unit": "mmHg",
       "value": 98.0,
       "contribution": 0.09
     }
