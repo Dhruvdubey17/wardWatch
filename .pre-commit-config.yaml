@@ -1,0 +1,27 @@
+# Every hook runs a tool already installed by `make setup`, so no hook
+# environment is downloaded at commit time.
+repos:
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff check
+        entry: bash -c 'cd python && uv run ruff check --config pyproject.toml . ../scripts'
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: ruff-format
+        name: ruff format
+        entry: bash -c 'cd python && uv run ruff format --config pyproject.toml --check . ../scripts'
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: clang-format
+        name: clang-format
+        entry: .tools/venv/bin/clang-format --dry-run --Werror
+        language: system
+        types_or: [c++, c]
+      - id: prose-lint
+        name: prose lint
+        entry: bash -c 'cd python && uv run python ../scripts/lint_prose.py'
+        language: system
+        pass_filenames: false

@@ -10,6 +10,7 @@ dev = [
     "jsonschema>=4.22",
     "mypy>=1.11",
     "pytest>=8.3",
+    "pre-commit>=3.8",
     "pytest-cov>=5.0",
     "ruff>=0.6",
 ]
@@ -52,7 +53,7 @@ warn_unreachable = true
 mypy_path = "."
 
 [tool.pytest.ini_options]
-pythonpath = ["."]
+pythonpath = [".", "../scripts"]
 addopts = "-p layer_markers --strict-markers -ra"
 markers = [
     "unit: in-process test with no network, no Docker and no real clock",
