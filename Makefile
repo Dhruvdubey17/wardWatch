@@ -21,7 +21,7 @@ CPP_SOURCES = $(shell cd $(INGEST) && for f in $$(git ls-files -co --exclude-sta
 py_test_dirs = $(shell cd python && for d in tests/$(1) ../scripts/tests/$(1) $(addsuffix /tests/$(1),$(PY_PACKAGES)); do \
 	ls $$d/test_*.py >/dev/null 2>&1 && echo $$d; done)
 
-.PHONY: python-coverage python-setup python-lint python-test-unit python-test-integration
+.PHONY: python-coverage python-env python-setup python-lint python-test-unit python-test-integration
 .PHONY: ingest-coverage ingest-build ingest-lint ingest-test-unit ingest-test-integration ingest-sanitize ingest-fuzz
 .PHONY: format help setup setup-tools data lint lint-prose test-unit test-integration test \
 	sanitize fuzz bench train eval coverage check up demo down autopilot
@@ -36,6 +36,7 @@ setup-tools:
 
 python-setup:
 	cd python && uv sync -q
+	./scripts/macos_openmp_rpath.sh
 	cd python && uv run pre-commit install
 
 setup: setup-tools python-setup
@@ -46,10 +47,15 @@ python-lint:
 	cd python && uv run mypy ../scripts/lint_prose.py ../scripts/tests
 	cd python && for pkg in $(PY_PACKAGES); do uv run mypy $$pkg/src $$( [ -n "$$(ls $$pkg/tests/*/*.py 2>/dev/null)" ] && echo $$pkg/tests ) || exit 1; done
 
-python-test-unit:
+# uv run may reinstall packages, which drops the macOS OpenMP rpath fix, so
+# every Python target that imports xgboost reapplies it first (a no-op when set).
+python-env:
+	@./scripts/macos_openmp_rpath.sh
+
+python-test-unit: python-env
 	cd python && uv run pytest -c pyproject.toml -q -m unit $(call py_test_dirs,unit)
 
-python-test-integration: ingest-build
+python-test-integration: ingest-build python-env
 	@dirs="$(call py_test_dirs,integration)"; if [ -z "$$dirs" ]; then echo "python-test-integration: no integration suites yet"; \
 	else cd python && uv run pytest -c pyproject.toml -q -m integration $$dirs; fi
 
@@ -130,7 +136,7 @@ ingest-coverage:
 # integration suites together. Packages without tests yet are skipped.
 PY_COVERAGE_GATES := simulator:wardwatch_sim:85 ml:wardwatch_ml:90 fhir_service:wardwatch_fhir:85 scorer:wardwatch_scorer:85
 
-python-coverage: ingest-build
+python-coverage: ingest-build python-env
 	cd python && for gate in $(PY_COVERAGE_GATES); do \
 		pkg=$${gate%%:*}; rest=$${gate#*:}; module=$${rest%%:*}; minimum=$${rest#*:}; \
 		ls $$pkg/tests/*/test_*.py >/dev/null 2>&1 || { echo "python-coverage: $$pkg has no tests yet"; continue; }; \
