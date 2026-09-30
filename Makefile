@@ -48,7 +48,8 @@ python-test-integration:
 	else cd python && uv run pytest -c pyproject.toml -q -m integration $$dirs; fi
 
 data:
-	@echo "data: added in Phase 0 task P0.6"
+	./scripts/fetch_physionet.sh
+	./scripts/generate_synthea.sh
 
 lint: python-lint
 
