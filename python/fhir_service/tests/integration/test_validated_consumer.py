@@ -118,6 +118,7 @@ async def test_messages_are_stored_and_observations_published(service: ServiceUn
     for key, payload in published:
         assert key == "MRN0001234"
         assert list(validator.iter_errors(payload)) == []
+        assert payload["encounter_start"] == "2024-03-15T08:30:00+00:00"
 
 
 async def test_unconvertible_messages_are_dead_lettered(service: ServiceUnderTest) -> None:

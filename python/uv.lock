@@ -1917,6 +1917,22 @@ provides-extras = ["model", "gru", "report"]
 name = "wardwatch-scorer"
 version = "0.1.0"
 source = { editable = "scorer" }
+dependencies = [
+    { name = "aiokafka" },
+    { name = "httpx" },
+    { name = "prometheus-client" },
+    { name = "pydantic-settings" },
+    { name = "wardwatch-ml", extra = ["model"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aiokafka", specifier = ">=0.11" },
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "prometheus-client", specifier = ">=0.20" },
+    { name = "pydantic-settings", specifier = ">=2.4" },
+    { name = "wardwatch-ml", extras = ["model"], editable = "ml" },
+]
 
 [[package]]
 name = "wardwatch-sim"

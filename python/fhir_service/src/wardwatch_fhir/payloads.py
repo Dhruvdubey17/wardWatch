@@ -12,13 +12,19 @@ def received_now() -> str:
 
 
 def observation_payload(
-    mrn: str, encounter_id: str, message_time: str, observation: dict[str, Any]
+    *,
+    mrn: str,
+    encounter_id: str,
+    encounter_start: str | None,
+    message_time: str,
+    observation: dict[str, Any],
 ) -> dict[str, Any]:
     """fhir.observations (contracts/schemas/fhir.observations.schema.json)."""
     return {
         "schema_version": SCHEMA_VERSION,
         "mrn": mrn,
         "encounter_id": encounter_id,
+        "encounter_start": encounter_start,
         "message_time": message_time,
         "observation": observation,
     }

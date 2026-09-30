@@ -34,7 +34,11 @@ def test_observation_payload_matches_contract() -> None:
         (contracts_dir() / "examples" / "fhir.observations" / "heart_rate.json").read_text()
     )
     payload = observation_payload(
-        example["mrn"], example["encounter_id"], example["message_time"], example["observation"]
+        mrn=example["mrn"],
+        encounter_id=example["encounter_id"],
+        encounter_start=example["encounter_start"],
+        message_time=example["message_time"],
+        observation=example["observation"],
     )
     assert payload == example
     assert list(validator("fhir.observations").iter_errors(payload)) == []

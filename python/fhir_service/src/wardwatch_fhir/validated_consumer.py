@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from wardwatch_fhir.converter import ConversionError, Converted, convert
 from wardwatch_fhir.metrics import CONVERSIONS, DEADLETTERED, OBSERVATIONS_STORED
 from wardwatch_fhir.payloads import deadletter_payload, observation_payload
-from wardwatch_fhir.repository import store_converted
+from wardwatch_fhir.repository import encounter_start, store_converted
 from wardwatch_fhir.settings import Settings
 
 log = logging.getLogger(__name__)
@@ -90,6 +90,7 @@ class ValidatedConsumer:
 
         async with self._sessions.begin() as session:
             await store_converted(session, converted)
+            started = await encounter_start(session, converted.encounter_id)
         CONVERSIONS.labels(message_type=converted.message_type).inc()
         OBSERVATIONS_STORED.inc(len(converted.observations))
         for observation in converted.observations:
@@ -98,7 +99,11 @@ class ValidatedConsumer:
                 key=converted.mrn.encode(),
                 value=_encode(
                     observation_payload(
-                        converted.mrn, converted.encounter_id, converted.message_time, observation
+                        mrn=converted.mrn,
+                        encounter_id=converted.encounter_id,
+                        encounter_start=started.isoformat() if started else None,
+                        message_time=converted.message_time,
+                        observation=observation,
                     )
                 ),
             )

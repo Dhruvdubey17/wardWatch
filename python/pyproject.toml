@@ -78,7 +78,7 @@ module = ["sklearn", "sklearn.*", "shap", "shap.*", "aiokafka", "aiokafka.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-pythonpath = [".", "../scripts"]
+pythonpath = [".", "../scripts", "scorer/tests"]
 addopts = "-p layer_markers --strict-markers -ra"
 markers = [
     "unit: in-process test with no network, no Docker and no real clock",

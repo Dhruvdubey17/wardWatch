@@ -9,6 +9,7 @@
     "schema_version",
     "mrn",
     "encounter_id",
+    "encounter_start",
     "message_time",
     "observation"
   ],
@@ -177,6 +178,13 @@
           }
         }
       }
+    },
+    "encounter_start": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Encounter.period.start (PV1-44 of the admission), so consumers can compute the ICU hour. Null when no admission has been stored."
     }
   }
 }
