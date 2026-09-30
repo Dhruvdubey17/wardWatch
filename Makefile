@@ -10,6 +10,10 @@ export PATH := $(TOOLS_DIR)/venv/bin:$(TOOLS_DIR)/node/node_modules/.bin:$(PATH)
 
 FUZZ_SECONDS ?= 60
 PY_PACKAGES := simulator ml fhir_service scorer
+INGEST := ingest
+# clang-tidy from PyPI does not know where the macOS SDK keeps libc++.
+TIDY_EXTRA := $(if $(filter Darwin,$(shell uname -s)),--extra-arg=-isysroot$(shell xcrun --show-sdk-path 2>/dev/null),)
+CPP_SOURCES = $(shell cd $(INGEST) && git ls-files -co --exclude-standard '*.cpp' '*.hpp' | grep -v '^build/')
 
 # Lists the test directories of one layer that contain at least one test file,
 # so pytest never runs on an empty directory and exits with code 5.
@@ -17,6 +21,7 @@ py_test_dirs = $(shell cd python && for d in tests/$(1) ../scripts/tests/$(1) $(
 	ls $$d/test_*.py >/dev/null 2>&1 && echo $$d; done)
 
 .PHONY: python-setup python-lint python-test-unit python-test-integration
+.PHONY: ingest-build ingest-lint ingest-test-unit ingest-sanitize ingest-fuzz
 .PHONY: help setup setup-tools data lint lint-prose test-unit test-integration test \
 	sanitize fuzz bench train eval coverage check up demo down autopilot
 
@@ -51,22 +56,41 @@ data:
 	./scripts/fetch_physionet.sh
 	./scripts/generate_synthea.sh
 
-lint: python-lint
+ingest-build:
+	cd $(INGEST) && cmake --preset debug >/dev/null && cmake --build --preset debug
+
+ingest-lint: ingest-build
+	cd $(INGEST) && clang-format --dry-run --Werror $(CPP_SOURCES)
+	cd $(INGEST) && clang-tidy -quiet -p build/debug $(TIDY_EXTRA) $$(git ls-files -co --exclude-standard 'src/*.cpp' 'apps/*.cpp')
+
+ingest-test-unit: ingest-build
+	cd $(INGEST) && ctest --preset unit
+
+ingest-sanitize:
+	cd $(INGEST) && cmake --preset asan >/dev/null && cmake --build --preset asan && ctest --preset asan
+	cd $(INGEST) && cmake --preset tsan >/dev/null && cmake --build --preset tsan && ctest --preset tsan
+
+ingest-fuzz:
+	cd $(INGEST) && cmake --preset fuzz >/dev/null && cmake --build --preset fuzz
+	cd $(INGEST) && for target in build/fuzz/fuzz/*_fuzz; do \
+		name=$$(basename $$target); corpus=build/fuzz/corpus/$$name; mkdir -p $$corpus; \
+		seeds=fuzz/corpus/$$name; [ -d $$seeds ] || seeds=""; \
+		$$target -max_total_time=$(FUZZ_SECONDS) -print_final_stats=1 $$corpus $$seeds || exit 1; done
+
+lint: python-lint ingest-lint
 
 lint-prose:
 	cd python && uv run python ../scripts/lint_prose.py
 
-test-unit: python-test-unit
+test-unit: python-test-unit ingest-test-unit
 
 test-integration: python-test-integration
 
 test: test-unit test-integration
 
-sanitize:
-	@echo "sanitize: added in Phase 1 with the ingest engine"
+sanitize: ingest-sanitize
 
-fuzz:
-	@echo "fuzz: added in Phase 1 task P1.12"
+fuzz: ingest-fuzz
 
 bench:
 	@echo "bench: added in Phase 1 task P1.14"

@@ -1,0 +1,20 @@
+// Generated from contracts/loinc_codes.json by cmake/LoincTable.cmake.
+#pragma once
+
+#include <array>
+#include <string_view>
+
+namespace wardwatch {
+
+struct LoincCode {
+    std::string_view code;
+    std::string_view display;
+    std::string_view ucum_unit;
+    double plausible_min;
+    double plausible_max;
+};
+
+inline constexpr std::array kLoincCodes{
+@loinc_rows@};
+
+}  // namespace wardwatch

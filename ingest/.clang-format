@@ -1,0 +1,16 @@
+BasedOnStyle: Google
+IndentWidth: 4
+ColumnLimit: 100
+AccessModifierOffset: -2
+DerivePointerAlignment: false
+PointerAlignment: Left
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^<gtest/|^<benchmark/|^<nlohmann/|^<librdkafka/'
+    Priority: 2
+  - Regex: '^<.*>'
+    Priority: 1
+  - Regex: '^"wardwatch/'
+    Priority: 3
+  - Regex: '.*'
+    Priority: 4
