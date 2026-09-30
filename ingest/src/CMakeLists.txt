@@ -3,6 +3,7 @@ add_library(wardwatch_core
   error.cpp
   loinc.cpp
   message.cpp
+  mllp.cpp
   types.cpp)
 target_include_directories(wardwatch_core
   PUBLIC ${PROJECT_SOURCE_DIR}/include ${WARDWATCH_GENERATED_DIR})
